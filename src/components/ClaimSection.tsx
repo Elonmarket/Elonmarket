@@ -177,16 +177,15 @@ export const ClaimSection = () => {
                   Checking status...
                 </Button>
               ) : claimInfo?.isWinner && !claimInfo.hasClaimed ? (
-                <Button
-                  variant="neon"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleClaim}
-                  disabled={claimLoading}
-                >
-                  <Gift className="w-4 h-4" />
-                  {claimLoading ? "Processing..." : `Claim ${claimInfo.unclaimedRewards.toFixed(6)} SOL`}
-                </Button>
+                <div className="p-4 rounded-lg bg-neon-green/10 border border-neon-green/50 text-center">
+                  <Trophy className="w-8 h-8 text-neon-green mx-auto mb-2" />
+                  <p className="text-neon-green font-bold text-lg">
+                    You Won {claimInfo.unclaimedRewards.toFixed(6)} SOL
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Sent automatically to your wallet address
+                  </p>
+                </div>
               ) : claimInfo?.hasClaimed ? (
                 <div className="p-4 rounded-lg bg-neon-green/10 border border-neon-green/50 text-center">
                   <CheckCircle className="w-8 h-8 text-neon-green mx-auto mb-2" />

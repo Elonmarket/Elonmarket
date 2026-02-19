@@ -5,6 +5,8 @@ import { parseStringPromise } from "xml2js";
 const NITTER_BASE_URL = process.env.NITTER_BASE_URL;
 const SUPABASE_WEBHOOK_URL = process.env.SUPABASE_WEBHOOK_URL;
 const WEBHOOK_SECRET = process.env.IFTTT_WEBHOOK_SECRET || "";
+// Set NITTER_INCLUDE_REPLIES=false to use default feed (excludes tweets starting with @)
+const INCLUDE_REPLIES = process.env.NITTER_INCLUDE_REPLIES !== "false";
 
 if (!NITTER_BASE_URL || !SUPABASE_WEBHOOK_URL) {
   console.error("Missing NITTER_BASE_URL or SUPABASE_WEBHOOK_URL");
@@ -15,7 +17,10 @@ let lastTweetId = null;
 
 async function poll() {
   try {
-    const rssUrl = `${NITTER_BASE_URL.replace(/\/$/, "")}/elonmusk/rss`;
+    // Use with_replies to include tweets that start with @ (e.g. "@Tesla is working hard")
+    // Default /rss excludes replies; with_replies includes them for winner detection
+    const feedPath = INCLUDE_REPLIES ? "elonmusk/with_replies/rss" : "elonmusk/rss";
+    const rssUrl = `${NITTER_BASE_URL.replace(/\/$/, "")}/${feedPath}`;
     const res = await fetch(rssUrl);
     if (!res.ok) {
       console.error("Nitter RSS error:", res.status, await res.text());

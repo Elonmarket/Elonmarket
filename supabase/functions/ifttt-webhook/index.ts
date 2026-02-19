@@ -67,15 +67,24 @@ Deno.serve(async (req) => {
     }
 
     // ── Filter out replies (not posts that happen to start with @) ──
+    // IMPORTANT: Tweets starting with @ (like "@Tesla is working hard") are often
+    // standalone posts mentioning companies, not replies. Accept them even if marked as replies.
+    const startsWithMention = /^@\w+/i.test(tweetText.trim());
     const isReply =
       body.in_reply_to_status_id && body.in_reply_to_status_id !== "";
 
-    if (isReply) {
+    // Only filter as reply if it's actually a reply AND doesn't start with @ mention
+    if (isReply && !startsWithMention) {
       console.log("Skipping reply:", tweetText.slice(0, 80));
       return new Response(
         JSON.stringify({ success: true, skipped: true, reason: "reply" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+    
+    // Log if we're accepting a tweet that starts with @ even though it might be marked as reply
+    if (startsWithMention && isReply) {
+      console.log("Accepting tweet starting with @ mention (may be incorrectly marked as reply):", tweetText.slice(0, 80));
     }
 
     // ── Build tweet record ─────────────────────────────

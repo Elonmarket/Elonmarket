@@ -77,7 +77,8 @@ const TweetCard = ({ tweet, index, predictionOptions }: { tweet: Tweet; index: n
     return () => clearInterval(interval);
   }, [postDate.getTime()]);
 
-  const cleanText = tweet.text.replace(/@\w+/g, "").replace(/\s{2,}/g, " ").trim();
+  // Preserve @mentions (e.g. @Tesla, @SpaceX) - only collapse extra spaces
+  const cleanText = tweet.text.replace(/\s{2,}/g, " ").trim();
   const truncatedText = cleanText.length > 180
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;

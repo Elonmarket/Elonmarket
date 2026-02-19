@@ -184,8 +184,54 @@ async function processLiveDetection(
 ) {
   const options = round.prediction_options as any[];
   const predictionStart = round.prediction_start_time || round.start_time;
+  const now = new Date();
+  const endTime = new Date(round.end_time);
 
-  // Get tweets during the prediction window (not voting window)
+  // If prediction window has ended, check for winner or mark as no winner
+  if (now >= endTime) {
+    // Get all tweets during the prediction window
+    const { data: tweets } = await supabase
+      .from("tweets")
+      .select("*")
+      .gte("created_at_twitter", predictionStart)
+      .lte("created_at_twitter", round.end_time)
+      .order("created_at_twitter", { ascending: true });
+
+    if (!tweets || tweets.length === 0) {
+      // No tweets during prediction window - no winner
+      await handleNoWinner(supabase, round);
+      return new Response(
+        JSON.stringify({
+          winner_detected: false,
+          message: "No posts during prediction window. Pool carries to next round.",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check each tweet in order - first matching post/quote wins
+    for (const tweet of tweets) {
+      if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
+
+      const match = matchTweetToOption(tweet.text, options);
+      if (match) {
+        // Winner found! Finalize immediately
+        return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
+      }
+    }
+
+    // No match found - mark as no winner, pool carries over
+    await handleNoWinner(supabase, round);
+    return new Response(
+      JSON.stringify({
+        winner_detected: false,
+        message: "No post matched any prediction option. Pool carries to next round.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Still within prediction window - check for matching tweets
   const { data: tweets } = await supabase
     .from("tweets")
     .select("*")
