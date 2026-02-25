@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "poll:nitter": "node nitter-poller-compatible.mjs",
+    "poll:watcher": "node watcher-complete.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -53,11 +55,14 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.4.7",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.31.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.2.1",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -69,6 +74,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
+    "xml2js": "^0.6.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {

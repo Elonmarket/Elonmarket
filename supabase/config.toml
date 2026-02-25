@@ -1,4 +1,4 @@
-project_id = "afydkqfqzmrevhelmujn"
+project_id = "xzswyicqxtocruvjyqlf"
 
 [functions.fetch-tweets]
 verify_jwt = false
