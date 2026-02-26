@@ -25,9 +25,10 @@ function matchTweetToOption(tweetText: string, options: any[]): { option: any; k
 
     // Special handling for "X" - must be standalone X or X.com
     if (label === "X") {
-      // Match standalone "X" (not part of another word)
-      const standaloneXRegex = /(?<![a-zA-Z0-9@#])X(?![a-zA-Z0-9])/g;
-      const xComRegex = /x\.com/gi;
+      // Match standalone "X" (e.g. "X", "@X", "#X") or "X.com"
+      // \b ensures we don't match "SpaceX" because "e" and "X" are both word chars, so no boundary exists.
+      const standaloneXRegex = /\bX\b/g;
+      const xComRegex = /\bx\.com\b/gi;
       
       const standaloneMatch = standaloneXRegex.exec(text);
       const xComMatch = xComRegex.exec(textLower);
@@ -43,12 +44,20 @@ function matchTweetToOption(tweetText: string, options: any[]): { option: any; k
       // For all other options, check exact word/mention matching
       for (const keyword of keywords) {
         const kw = keyword.toLowerCase();
-        // Use word boundary matching
+        // Use word boundary matching for the keyword itself
         const regex = new RegExp(`(?<![a-zA-Z0-9@#])${escapeRegex(kw)}(?![a-zA-Z0-9])`, "gi");
         const match = regex.exec(text);
         if (match && (matchPosition === -1 || match.index < matchPosition)) {
           matchPosition = match.index;
           matchedKeywords.push(keyword);
+        }
+
+        // Also check for .com variant (e.g., SpaceX.com, Tesla.com)
+        const comRegex = new RegExp(`(?<![a-zA-Z0-9@#])${escapeRegex(kw)}\\.com(?![a-zA-Z0-9])`, "gi");
+        const comMatch = comRegex.exec(text);
+        if (comMatch && (matchPosition === -1 || comMatch.index < matchPosition)) {
+          matchPosition = comMatch.index;
+          matchedKeywords.push(`${keyword}.com`);
         }
       }
 

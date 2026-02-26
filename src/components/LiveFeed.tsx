@@ -34,17 +34,19 @@ const detectMatchingOptions = (text: string, options: string[]): string[] => {
 
     if (option === "X") {
       // Match standalone X or X.com
-      const standaloneX = /(?<![a-zA-Z0-9@#])X(?![a-zA-Z0-9])/;
-      const xCom = /x\.com/i;
+      // \b ensures we don't match "SpaceX" because "e" and "X" are both word chars, so no boundary exists.
+      const standaloneX = /\bX\b/;
+      const xCom = /\bx\.com\b/i;
       if (standaloneX.test(raw) || xCom.test(raw)) matches.push(option);
       continue;
     }
 
     const kw = escapeRegex(option);
     const wordRegex = new RegExp(`(?<![a-zA-Z0-9@#])${kw}(?![a-zA-Z0-9])`, "i");
+    const comRegex = new RegExp(`(?<![a-zA-Z0-9@#])${kw}\\.com(?![a-zA-Z0-9])`, "i");
     const mentionRegex = new RegExp(`@${kw}\\b`, "i");
 
-    if (wordRegex.test(raw) || mentionRegex.test(raw)) matches.push(option);
+    if (wordRegex.test(raw) || comRegex.test(raw) || mentionRegex.test(raw)) matches.push(option);
   }
 
   return matches;
