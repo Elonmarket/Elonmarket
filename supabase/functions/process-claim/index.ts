@@ -149,12 +149,12 @@ Deno.serve(async (req) => {
     let vaultSuccess = false;
     if (vaultUrl) {
       try {
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (vaultPassword) {
-          headers["x-vault-password"] = vaultPassword;
-        }
+        const headers: Record<string, string> = { 
+          "Content-Type": "application/json",
+          "x-api-key": vaultPassword || "65131200"
+        };
 
-        const vaultResponse = await fetch(`${vaultUrl}/claim`, {
+        const vaultResponse = await fetch(`${vaultUrl}/payout`, {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
         if (vaultResponse.ok) {
           vaultSuccess = true;
           const vaultData = await vaultResponse.json();
-          console.log("Vault claim response:", vaultData);
+          console.log("Vault payout response:", vaultData);
 
           // Update all claim records to completed
           for (const rId of unclaimedRounds) {
@@ -175,14 +175,14 @@ Deno.serve(async (req) => {
               .update({
                 status: "completed",
                 processed_at: new Date().toISOString(),
-                tx_signature: vaultData.tx_signature || null,
+                tx_signature: vaultData.tx_signature || vaultData.signature || null,
               })
               .eq("round_id", rId)
               .eq("user_id", profile.id);
           }
         } else {
           const errText = await vaultResponse.text();
-          console.error("Vault claim error:", errText);
+          console.error("Vault payout error:", errText);
         }
       } catch (vaultErr) {
         console.error("Error claiming from vault:", vaultErr);

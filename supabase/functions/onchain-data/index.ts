@@ -121,6 +121,45 @@ async function getTokenHolderCount(mint: string): Promise<number> {
   return 0;
 }
 
+async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address: string; balance_sol: number }> {
+  let address = "";
+  let balance = 0;
+
+  try {
+    // 1. Get vault address from API
+    const fundRes = await fetch(`${vaultUrl}/fund`);
+    if (fundRes.ok) {
+      const fundData = await fundRes.json();
+      address = fundData.vault_address || fundData.address || "";
+    }
+  } catch (e) {
+    console.error("Vault address fetch failed:", e);
+  }
+
+  try {
+    // 2. Try to get balance from API
+    const balRes = await fetch(`${vaultUrl}/balance`, {
+      headers: { "x-api-key": apiKey },
+    });
+    if (balRes.ok) {
+      const balData = await balRes.json();
+      balance = balData.balance || 0;
+    } else {
+      console.warn(`Vault API balance error: ${balRes.status}`);
+    }
+  } catch (e) {
+    console.error("Vault balance fetch failed:", e);
+  }
+
+  // 3. Fallback: If balance is 0 or API failed, but we have an address, use RPC
+  if (balance === 0 && address) {
+    console.log(`Using RPC fallback for vault balance at ${address}`);
+    balance = await getSOLBalance(address);
+  }
+
+  return { address, balance_sol: balance };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -129,6 +168,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const vaultUrl = Deno.env.get("VAULT_URL") || "http://64.176.63.197:8000";
+    const vaultApiKey = Deno.env.get("VAULT_PASSWORD") || "65131200";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get wallet config from DB
@@ -147,12 +188,23 @@ Deno.serve(async (req) => {
     const { vault_wallet_address, payout_wallet_address, token_contract_address, payout_percentage } = walletConfig;
 
     // Fetch all on-chain data in parallel
-    const [vaultBalanceSOL, payoutBalanceSOL, tokenSupplyData, holderCount] = await Promise.all([
-      getSOLBalance(vault_wallet_address),
+    const [vaultInfo, payoutBalanceSOL, tokenSupplyData, holderCount] = await Promise.all([
+      getVaultInfo(vaultUrl, vaultApiKey),
       getSOLBalance(payout_wallet_address),
       getTokenSupply(token_contract_address),
       getTokenHolderCount(token_contract_address),
     ]);
+
+    // Update vault address if it's different from config
+    const finalVaultAddress = vaultInfo.address || vault_wallet_address;
+    const vaultBalanceSOL = vaultInfo.balance_sol;
+
+    if (vaultInfo.address && vaultInfo.address !== vault_wallet_address) {
+      await supabase
+        .from("wallet_config")
+        .update({ vault_wallet_address: vaultInfo.address })
+        .eq("id", walletConfig.id);
+    }
 
     const currentRoundPayout = vaultBalanceSOL * ((payout_percentage || 15) / 100);
 
@@ -169,7 +221,7 @@ Deno.serve(async (req) => {
 
     const result = {
       vault: {
-        address: vault_wallet_address,
+        address: finalVaultAddress,
         balance_sol: vaultBalanceSOL,
       },
       payout: {

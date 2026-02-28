@@ -1,82 +1,93 @@
-# 🚀 MuskMarket: Elon Musk Prediction Game
+# 🚀 MuskMarket: Free-to-Play Elon Prediction Market (SOL Rewards)
 
-MuskMarket is a high-stakes, free-to-play prediction platform built on **Solana** and **Supabase**. Players use their $MUX tokens to predict the topic of Elon Musk's next post on X (Twitter). Correct predictions earn rewards from a prize pool funded by on-chain revenue.
+MuskMarket is a decentralized, free-to-play prediction marketplace where users predict what Elon Musk will post first next on X. Will it be about Grok, Starlink, Tesla, or X? Winners automatically receive SOL rewards directly in their wallets—no manual claims, no gas interactions, and no complex wallet connections.
 
-![MuskMarket Banner](/public/musk-logo.jpg)
+**Simple. Transparent. Automated.**
 
-## ✨ Features
+![MuskMarket Banner](/public/musk-logo1.jpg)
 
-- **Live Prediction Markets:** Real-time rounds with dynamic voting windows.
-- **On-Chain Verification:** Voting eligibility is verified against your Solana wallet's $MUX balance.
-- **Automatic Winner Detection:** Backend integration with X (via IFTTT/Webhooks) to instantly detect winners.
-- **Automated Payouts:** Rewards are automatically calculated and queued for distribution to winners.
-- **Global Leaderboard:** Track the top earners and most accurate predictors in the community.
-- **Player Profiles:** Detailed statistics, achievement badges, and activity history for every player.
+## 🌟 Core Features
 
-## 🛠️ Tech Stack
+- 🔮 **Predict Elon’s X post:** Foresee the next topic in the Musk ecosystem.
+- 💰 **Win SOL automatically:** Rewards are sent directly to your registered wallet.
+- 🔌 **No wallet connection required:** Participate using just your username and wallet address.
+- 👤 **Unified Identity:** Your Username + Wallet Address = Your Account.
+- 🔐 **Token-Gated Participation:** Hold $MUX tokens to unlock voting eligibility.
+- ⚡ **Real-Time Streaming:** Watch Elon's posts appear live via our high-speed monitoring engine.
+- 🤖 **Automated Reward Engine:** Instant winner detection and distribution.
+- 🏆 **Global Leaderboard:** Track your rank against the world's best predictors.
+- 💎 **Sustainable Rewards:** Funded by Creator Rewards from pump.fun with auto-vault funding every 10 minutes.
 
-- **Frontend:** React, Vite, TypeScript, Tailwind CSS, Shadcn UI, Framer Motion.
-- **Backend:** Supabase (Edge Functions, PostgreSQL, Realtime, RLS).
-- **Blockchain:** Solana (Web3.js, Wallet Adapter).
-- **Ingestion:** IFTTT Webhooks / Custom Tweet Pollers.
+---
 
-## 🚀 Getting Started
+## 📍 How It Works (Game Flow)
 
-### Prerequisites
-- Node.js (v18+)
-- Supabase CLI
-- A Solana Wallet (e.g., Phantom)
+### 1️⃣ User Registration
+Users register by submitting a **Username** and a **Solana Wallet Address**.
+- No email. No password. No wallet signature.
+- Your identity is tied directly to your provided wallet and chosen username.
 
-### Frontend Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/muskmarket.git
-   cd muskmarket
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Configure environment variables:
-   Copy `.env.example` to `.env` and fill in your Supabase credentials.
-4. Start development server:
-   ```bash
-   npm run dev
-   ```
+### 2️⃣ Token Eligibility ($MUX Requirement)
+To participate, users must hold a minimum threshold of $MUX tokens (e.g., 10,000 $MUX). Our backend verifies your on-chain balance before allowing any predictions to be placed.
 
-### Backend Setup (Supabase)
-1. Initialize Supabase:
-   ```bash
-   supabase init
-   ```
-2. Apply migrations:
-   ```bash
-   supabase migration up
-   ```
-3. Deploy Edge Functions:
-   ```bash
-   supabase functions deploy detect-winner
-   // Repeat for other functions in supabase/functions
-   ```
-4. Set required secrets:
-   ```bash
-   supabase secrets set IFTTT_TIMEZONE_OFFSET=6
-   ```
+### 3️⃣ Prediction Window
+Each round has a specific time window (e.g., 1:00 PM – 3:00 PM UTC). Users must cast their votes before the window opens or before the **Vote Lock** period begins.
 
-## 🎮 How to Play
+### 4️⃣ Prediction Options
+Each round features curated options based on the Musk ecosystem:
+- **Grok / AI**
+- **Tesla**
+- **Starlink**
+- **SpaceX**
+- **X / X.com**
+- **Doge**
+- **Gork / Grokpedia**
 
-1. **Connect Wallet:** Link your Solana wallet to the platform.
-2. **Hold $MUX:** Ensure you meet the minimum token requirement to be eligible for voting.
-3. **Cast Prediction:** Select your predicted category before the voting window closes.
-4. **Wait for Post:** Once the monitoring window starts, the system scans for Elon's next post.
-5. **Win SOL:** If your category is mentioned first, you win! Rewards are sent automatically.
+### 5️⃣ Real-Time Monitoring & Validation
+Our dedicated scraping engine monitors Elon’s X profile in real-time. A valid winning post must:
+- Be authored or reposted by Elon.
+- Appear within the prediction window.
+- Contain an exact keyword match (e.g., "Starlink" or "@Tesla").
+- Be the **first** matching post detected in the window.
 
-## 🛡️ Security
+### 6️⃣ Automated Distribution
+Once a winner is determined:
+1. The system identifies all users who voted for the winning category.
+2. The reward pool (10-20% of the current vault balance) is finalized.
+3. **SOL is distributed automatically** to the winner(s) via the vault.
+4. No claiming or gas fees required from the user.
 
-- **RLS Policies:** All database access is secured via Row Level Security.
-- **Vault Architecture:** Private keys for reward distribution are stored in a secure, external vault environment.
-- **Balance Verification:** Token balances are verified directly on the Solana mainnet before every vote.
+---
 
-## 📜 License
+## 💎 Reward Pool & Funding
+The MuskMarket vault is funded entirely by **Creator Rewards** generated from pump.fun. An automated bot runs every 10 minutes to withdraw eligible rewards and transfer them to the vault, ensuring a continuous and transparent reward cycle.
 
+**No-Winner Rounds:** If no matching post is detected within a window, the funds remain in the vault and carry over to strengthen future rounds.
+
+---
+
+## 📊 Data-Driven Design
+MuskMarket is built on extensive analysis of Elon Musk’s posting behavior. Over 75% of his activity consistently revolves around his core companies (Tesla, SpaceX, X, Grok). Our prediction windows and options are strategically aligned with peak activity periods to ensure high-engagement gameplay.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+- **Frontend:** React (Vite), TypeScript, Tailwind CSS, Framer Motion.
+- **Backend:** Supabase (Edge Functions, PostgreSQL, Realtime).
+- **Monitoring:** Node.js Scraper with Headless Chromium & WebSocket streaming.
+- **Blockchain:** Solana (Web3.js) & Custom Vault API for automated payouts.
+- **Infrastructure:** Ubuntu VPS, PM2 Process Manager, Nginx.
+
+---
+
+## 📜 Technical Documentation
+
+- [Project Setup & Installation](docs/SETUP.md)
+- [Architecture & Game Logic](docs/PROJECT_OVERVIEW.md)
+- [Supabase Configuration](docs/SUPABASE_SETUP.md)
+
+---
+
+## ⚖️ License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -388,25 +388,44 @@ async function finalizeRound(
       });
     }
 
-    // Send winners to vault server
+    // Send winners to vault server via individual /payout calls
     if (vaultUrl && winnersForVault.length > 0) {
-      try {
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (vaultPassword) {
-          headers["x-vault-password"] = vaultPassword;
+      console.log(`Processing ${winnersForVault.length} payouts...`);
+      
+      const headers: Record<string, string> = { 
+        "Content-Type": "application/json",
+        "x-api-key": vaultPassword || "65131200"
+      };
+
+      // Process payouts in parallel with a limit to avoid overwhelming the vault/network
+      const payoutPromises = winnersForVault.map(async (winner) => {
+        try {
+          const res = await fetch(`${vaultUrl}/payout`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              wallet: winner.user,
+              amount: winner.amount,
+            }),
+          });
+          
+          if (!res.ok) {
+            const errText = await res.text();
+            console.error(`Payout failed for ${winner.user}: ${res.status} ${errText}`);
+            return { success: false, user: winner.user, error: errText };
+          }
+          
+          const data = await res.json();
+          return { success: true, user: winner.user, tx: data.tx_signature || data.signature };
+        } catch (e) {
+          console.error(`Payout error for ${winner.user}:`, e);
+          return { success: false, user: winner.user, error: String(e) };
         }
+      });
 
-        const vaultResponse = await fetch(`${vaultUrl}/winners`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ winners: winnersForVault }),
-        });
-
-        const vaultData = await vaultResponse.json();
-        console.log("Vault response:", vaultData);
-      } catch (vaultErr) {
-        console.error("Error sending winners to vault:", vaultErr);
-      }
+      const results = await Promise.all(payoutPromises);
+      const successCount = results.filter(r => r.success).length;
+      console.log(`Payouts completed: ${successCount}/${winnersForVault.length}`);
     }
   }
 

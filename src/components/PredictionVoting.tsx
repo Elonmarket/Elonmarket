@@ -22,7 +22,7 @@ const optionIcons: Record<string, string> = {
   Meme: "/doge-logo.png", // Using doge as a proxy for meme
   X: "/x-logo.png",
   Grokpedia: "/grok-logo.png", // Using grok as a proxy
-  Starlink: "/spacex-logo.png", // Using spacex as a proxy
+  Starlink: "/starlink-logo.png",
 };
 
 const optionColors: Record<string, string> = {

@@ -69,11 +69,35 @@ const Profile = () => {
 
         if (pError) throw pError;
 
-        // 2. Fetch rank
-        const { count: rankCount } = await supabase
+        // 2. Fetch rank using multiple criteria to avoid everyone being #1
+        // We rank by: 1. Total Claimed (SOL), 2. Total Wins, 3. Total Predictions
+        const { count: higherClaimed } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true })
           .gt("total_claimed_usd", pData.total_claimed_usd || 0);
+
+        const { count: sameClaimedHigherWins } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("total_claimed_usd", pData.total_claimed_usd || 0)
+          .gt("total_wins", pData.total_wins || 0);
+
+        const { count: sameBothHigherPredictions } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("total_claimed_usd", pData.total_claimed_usd || 0)
+          .eq("total_wins", pData.total_wins || 0)
+          .gt("total_predictions", pData.total_predictions || 0);
+
+        const { count: sameThreeEarlier } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("total_claimed_usd", pData.total_claimed_usd || 0)
+          .eq("total_wins", pData.total_wins || 0)
+          .eq("total_predictions", pData.total_predictions || 0)
+          .lt("created_at", pData.created_at);
+
+        const calculatedRank = (higherClaimed || 0) + (sameClaimedHigherWins || 0) + (sameBothHigherPredictions || 0) + (sameThreeEarlier || 0) + 1;
 
         setProfile({
           display_name: pData.display_name,
@@ -81,7 +105,7 @@ const Profile = () => {
           total_wins: pData.total_wins || 0,
           total_predictions: pData.total_predictions || 0,
           total_claimed_usd: Number(pData.total_claimed_usd || 0),
-          rank: (rankCount || 0) + 1,
+          rank: calculatedRank,
         });
 
         // 3. Fetch recent votes
@@ -177,7 +201,7 @@ const Profile = () => {
           </div>
           <h2 className="text-3xl font-display font-bold mb-4 uppercase tracking-tight">Access Denied</h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">You must be logged in with a registered wallet to view player profiles.</p>
-          <Button asChild variant="neon" size="lg">
+          <Button asChild variant="glass" size="lg">
             <Link to="/">Return to Hub</Link>
           </Button>
         </div>

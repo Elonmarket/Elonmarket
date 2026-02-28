@@ -36,7 +36,7 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center group">
             <div className="h-10 md:h-12 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
-              <img src="/musk-logo.jpg" alt="Musk Market" className="h-full w-auto object-contain" />
+              <img src="/musk-logo.png" alt="Musk Market" className="h-full w-auto object-contain" />
             </div>
           </Link>
 

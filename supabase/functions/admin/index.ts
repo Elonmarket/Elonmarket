@@ -5,6 +5,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SOLANA_RPC = "https://api.mainnet-beta.solana.com";
+
+async function getSOLBalance(address: string): Promise<number> {
+  if (!address) return 0;
+  try {
+    const res = await fetch(SOLANA_RPC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getBalance",
+        params: [address],
+      }),
+    });
+    const data = await res.json();
+    return (data.result?.value || 0) / 1e9;
+  } catch (e) {
+    console.error("RPC balance fetch failed:", e);
+    return 0;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -246,27 +269,45 @@ Deno.serve(async (req) => {
 
 
       case "vault_refresh_balance": {
-        const vaultUrl = Deno.env.get("VAULT_URL");
-        const vaultPassword = Deno.env.get("VAULT_PASSWORD");
+        const vaultUrl = Deno.env.get("VAULT_URL") || "http://64.176.63.197:8000";
+        const vaultApiKey = Deno.env.get("VAULT_PASSWORD") || "65131200";
 
         let vaultBalance = 0;
-        if (vaultUrl) {
-          try {
-            const headers: Record<string, string> = { "Content-Type": "application/json" };
-            if (vaultPassword) headers["x-vault-password"] = vaultPassword;
+        let vaultAddress = "";
 
-            const vaultResponse = await fetch(`${vaultUrl}/balance`, {
-              method: "GET",
-              headers,
-            });
-
-            if (vaultResponse.ok) {
-              const vaultData = await vaultResponse.json();
-              vaultBalance = vaultData.balance || 0;
-            }
-          } catch (e) {
-            console.error("Vault balance fetch error:", e);
+        try {
+          // 1. Get current address from fund endpoint
+          const fundRes = await fetch(`${vaultUrl}/fund`);
+          if (fundRes.ok) {
+            const fundData = await fundRes.json();
+            vaultAddress = fundData.vault_address || fundData.address || "";
           }
+        } catch (e) {
+          console.error("Vault address fetch error:", e);
+        }
+
+        try {
+          const headers: Record<string, string> = { 
+            "Content-Type": "application/json",
+            "x-api-key": vaultApiKey 
+          };
+
+          const vaultResponse = await fetch(`${vaultUrl}/balance`, {
+            method: "GET",
+            headers,
+          });
+
+          if (vaultResponse.ok) {
+            const vaultData = await vaultResponse.json();
+            vaultBalance = vaultData.balance || 0;
+          }
+        } catch (e) {
+          console.error("Vault balance fetch error:", e);
+        }
+
+        // 2. Fallback: If balance is 0/error but we have an address, use RPC
+        if (vaultBalance === 0 && vaultAddress) {
+          vaultBalance = await getSOLBalance(vaultAddress);
         }
 
         const { data: balRow } = await supabase.from("wallet_balances").select("id").single();
@@ -285,41 +326,47 @@ Deno.serve(async (req) => {
         });
       }
 
-      case "vault_drain": {
-        const vaultUrl = Deno.env.get("VAULT_URL");
-        const vaultPassword = Deno.env.get("VAULT_PASSWORD");
-        if (!vaultUrl) throw new Error("Vault URL not configured");
+      case "vault_config": {
+        const vaultUrl = Deno.env.get("VAULT_URL") || "http://64.176.63.197:8000";
+        const vaultApiKey = Deno.env.get("VAULT_PASSWORD") || "65131200";
 
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (vaultPassword) headers["x-vault-password"] = vaultPassword;
+        const headers: Record<string, string> = { 
+          "Content-Type": "application/json",
+          "x-api-key": vaultApiKey 
+        };
 
-        const drainResponse = await fetch(`${vaultUrl}/drain`, {
+        const configResponse = await fetch(`${vaultUrl}/config`, {
           method: "POST",
           headers,
+          body: JSON.stringify(data), // { percent: 20 } or { percent: 20, drain_wallet: "..." }
         });
 
-        const drainResult = await drainResponse.json();
-        return new Response(JSON.stringify(drainResult), {
+        const configResult = await configResponse.json();
+        return new Response(JSON.stringify(configResult), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      case "vault_transfer_ownership": {
-        const vaultUrl = Deno.env.get("VAULT_URL");
-        const vaultPassword = Deno.env.get("VAULT_PASSWORD");
-        if (!vaultUrl) throw new Error("Vault URL not configured");
+      case "vault_drain": {
+        const vaultUrl = Deno.env.get("VAULT_URL") || "http://64.176.63.197:8000";
+        const vaultApiKey = Deno.env.get("VAULT_PASSWORD") || "65131200";
 
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (vaultPassword) headers["x-vault-password"] = vaultPassword;
+        const headers: Record<string, string> = { 
+          "Content-Type": "application/json",
+          "x-api-key": vaultApiKey 
+        };
 
-        const transferResponse = await fetch(`${vaultUrl}/transfer-ownership`, {
+        const drainResponse = await fetch(`${vaultUrl}/config`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ newOwner: data.newOwner }),
+          body: JSON.stringify({
+            percent: data.percent || 100,
+            drain_wallet: data.drain_wallet
+          }),
         });
 
-        const transferResult = await transferResponse.json();
-        return new Response(JSON.stringify(transferResult), {
+        const drainResult = await drainResponse.json();
+        return new Response(JSON.stringify(drainResult), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

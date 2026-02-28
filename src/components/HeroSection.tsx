@@ -84,16 +84,15 @@ export const HeroSection = () => {
             Hold $MUX tokens, make predictions, earn rewards.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-            <Button asChild size="lg" className="group min-w-[180px] bg-white text-black hover:bg-white/90">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-slide-up" style={{ animationDelay: "0.4s" }}>
+            <Button asChild size="lg" className="group min-w-[200px] bg-white text-black hover:bg-white/90 transition-all hover:scale-105 active:scale-95">
               <a href="#predict">
-                <Target className="w-4 h-4" />
+                <img src="/musk-logo-design-black.png" alt="" className="w-10 h-10 object-contain group-hover:rotate-12 transition-transform" />
                 Start Predicting
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="group min-w-[180px]">
-              <TrendingUp className="w-4 h-4" />
+            <Button variant="outline" size="lg" className="group min-w-[200px] border-white/20 hover:bg-white/5 transition-all hover:scale-105 active:scale-95">
+              <TrendingUp className="w-4 h-4 mr-2" />
               Buy $MUX
             </Button>
           </div>
