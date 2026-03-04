@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clock, Trophy, Users, Lock, CheckCircle, AlertCircle, Timer, Shield } from "lucide-react";
+import { Clock, Trophy, Users, Lock, CheckCircle, AlertCircle, Timer, Shield, User as UserIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,8 +9,9 @@ import { useVoting } from "@/hooks/useVoting";
 import { useTokenVerification } from "@/hooks/useTokenVerification";
 import { useHasVoted } from "@/hooks/useHasVoted";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/AuthModal";
 import { differenceInSeconds } from "date-fns";
-import { formatToLocalTime, formatToLocalFullDate } from "@/lib/utils";
+import { formatToLocalTime, formatToLocalFullDate, parseToUTC } from "@/lib/utils";
 
 const optionIcons: Record<string, string> = {
   Tesla: "/tesla-logo.png",
@@ -53,6 +54,7 @@ export const PredictionVoting = () => {
   const [voteLockRemaining, setVoteLockRemaining] = useState<string>("");
   const [localHasVoted, setLocalHasVoted] = useState(false);
   const [isVoteLocked, setIsVoteLocked] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const hasVoted = hasVotedFromDb || localHasVoted;
 
@@ -72,7 +74,7 @@ export const PredictionVoting = () => {
       
       // Vote locking logic
       if (currentRound.status === "open" && currentRound.prediction_start_time) {
-        const predictionStart = new Date(currentRound.prediction_start_time);
+        const predictionStart = parseToUTC(currentRound.prediction_start_time);
         const voteLockMinutes = currentRound.vote_lock_minutes || 60;
         const voteLockTime = new Date(predictionStart.getTime() - voteLockMinutes * 60 * 1000);
         
@@ -98,11 +100,16 @@ export const PredictionVoting = () => {
         }
       }
 
-      const endTime = new Date(currentRound.end_time);
+      const endTime = parseToUTC(currentRound.end_time);
       const seconds = differenceInSeconds(endTime, now);
 
       if (seconds <= 0) {
         setTimeRemaining("Round ended");
+        setVoteLockRemaining("Finalizing...");
+        // Trigger a refetch once when the timer reaches zero to finalize the round via the hook logic
+        if (currentRound.status === "open") {
+          refetch();
+        }
         return;
       }
 
@@ -288,8 +295,8 @@ export const PredictionVoting = () => {
                 {/* Vote Button */}
                 <div className="space-y-4">
                   {!user ? (
-                    <Button variant="neon" className="w-full" disabled>
-                      <Lock className="w-3.5 h-3.5" />
+                    <Button variant="neon" className="w-full" onClick={() => setAuthModalOpen(true)}>
+                      <UserIcon className="w-3.5 h-3.5 mr-2" />
                       Log in to vote
                     </Button>
                   ) : tokenLoading ? (
@@ -409,6 +416,7 @@ export const PredictionVoting = () => {
           </div>
         </div>
       </div>
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </section>
   );
 };

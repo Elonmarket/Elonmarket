@@ -11,11 +11,14 @@ async function verifyTokenBalanceOnChain(
   tokenContract: string,
   rpcUrl: string
 ): Promise<number> {
-  if (!tokenContract || tokenContract.length === 0) {
-    return Infinity;
+  // If no contract is set, voting is effectively open to all.
+  // We'll return 999,999,999 to represent a "passing" balance that fits in NUMERIC(20,6)
+  if (!tokenContract || tokenContract.trim().length === 0) {
+    return 1000000; 
   }
 
   try {
+    console.log(`Verifying balance for ${walletAddress} on contract ${tokenContract}`);
     const response = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,6 +36,11 @@ async function verifyTokenBalanceOnChain(
 
     const data = await response.json();
     
+    if (data.error) {
+      console.error("RPC Error:", data.error);
+      return 0;
+    }
+
     if (data.result?.value?.length > 0) {
       const tokenAmount = data.result.value[0].account.data.parsed.info.tokenAmount;
       return Number(tokenAmount.uiAmount) || 0;
@@ -51,10 +59,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { walletAddress, roundId, optionId } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { walletAddress, roundId, optionId } = body;
 
     if (!walletAddress || !roundId || !optionId) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+      return new Response(JSON.stringify({ error: "Missing required fields: walletAddress, roundId, or optionId" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -65,10 +74,14 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get wallet config for minimum token balance
-    const { data: walletConfig } = await supabase
+    const { data: walletConfig, error: configError } = await supabase
       .from("wallet_config")
       .select("min_token_balance, token_contract_address")
       .single();
+
+    if (configError && configError.code !== "PGRST116") {
+      throw new Error(`Config error: ${configError.message}`);
+    }
 
     const minBalance = walletConfig?.min_token_balance || 1;
     const tokenContract = walletConfig?.token_contract_address || "";
@@ -80,7 +93,7 @@ Deno.serve(async (req) => {
     if (verifiedTokenBalance < minBalance) {
       return new Response(
         JSON.stringify({
-          error: `Insufficient token balance. Required: ${minBalance}, Verified: ${verifiedTokenBalance}`,
+          error: `Insufficient token balance. Required: ${minBalance}, Verified: ${verifiedTokenBalance}. Please make sure you have the required tokens in your wallet.`,
         }),
         {
           status: 403,
@@ -90,14 +103,21 @@ Deno.serve(async (req) => {
     }
 
     // Check if round is open
-    const { data: round } = await supabase
+    const { data: round, error: roundError } = await supabase
       .from("prediction_rounds")
       .select("*")
       .eq("id", roundId)
       .single();
 
-    if (!round || round.status !== "open") {
-      return new Response(JSON.stringify({ error: "Round is not open for voting" }), {
+    if (roundError || !round) {
+      return new Response(JSON.stringify({ error: "Round not found or database error" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (round.status !== "open") {
+      return new Response(JSON.stringify({ error: `Round is ${round.status}, not open for voting.` }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -127,14 +147,19 @@ Deno.serve(async (req) => {
     }
 
     // Get or create user profile
-    let { data: profile } = await supabase
+    let { data: profile, error: profileGetError } = await supabase
       .from("profiles")
       .select("id")
       .eq("wallet_address", walletAddress)
-      .single();
+      .maybeSingle();
+
+    if (profileGetError) {
+      throw new Error(`Profile fetch error: ${profileGetError.message}`);
+    }
 
     if (!profile) {
-      const { data: newProfile, error: profileError } = await supabase
+      console.log(`Creating new profile for ${walletAddress}`);
+      const { data: newProfile, error: profileInsertError } = await supabase
         .from("profiles")
         .insert({
           wallet_address: walletAddress,
@@ -143,25 +168,33 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
 
-      if (profileError) {
-        throw profileError;
+      if (profileInsertError) {
+        throw new Error(`Profile creation failed: ${profileInsertError.message}`);
       }
       profile = newProfile;
 
       // Add user role
-      await supabase.from("user_roles").insert({
+      const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: profile.id,
         role: "user",
       });
+      
+      if (roleError) {
+        console.error("Warning: Could not assign user role:", roleError.message);
+      }
     }
 
     // Check if user already voted this round
-    const { data: existingVote } = await supabase
+    const { data: existingVote, error: voteCheckError } = await supabase
       .from("votes")
       .select("id")
       .eq("round_id", roundId)
       .eq("user_id", profile.id)
-      .single();
+      .maybeSingle();
+
+    if (voteCheckError) {
+      throw new Error(`Vote check error: ${voteCheckError.message}`);
+    }
 
     if (existingVote) {
       return new Response(JSON.stringify({ error: "You have already voted this round" }), {
@@ -171,6 +204,7 @@ Deno.serve(async (req) => {
     }
 
     // Insert vote
+    console.log(`Inserting vote for user ${profile.id} on round ${roundId}`);
     const { data: vote, error: voteError } = await supabase
       .from("votes")
       .insert({
@@ -184,15 +218,16 @@ Deno.serve(async (req) => {
       .single();
 
     if (voteError) {
-      throw voteError;
+      throw new Error(`Vote insertion failed: ${voteError.message}`);
     }
 
     return new Response(JSON.stringify({ success: true, vote }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error submitting vote:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    const errorMessage = error.message || error.error_description || error.toString() || "Unknown error";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

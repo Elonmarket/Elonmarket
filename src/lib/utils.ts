@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function parseToUTC(dateString: string | undefined | null): Date {
+  if (!dateString) return new Date();
+  
+  // If it already has Z or + offset, new Date() handles it correctly as UTC/Offset
+  // If not, we append Z to force UTC interpretation (standard for Supabase timestamps)
+  const isoString = dateString.includes('Z') || dateString.includes('+') 
+    ? dateString 
+    : `${dateString.replace(' ', 'T')}Z`;
+  
+  const date = new Date(isoString);
+  return isNaN(date.getTime()) ? new Date() : date;
+}
+
 /**
  * Formats a UTC date string to the user's local time.
  * Explicitly treats the input as UTC to ensure the browser performs the correct shift.
@@ -13,19 +26,10 @@ export function formatToLocalTime(dateString: string | undefined | null) {
   if (!dateString) return "";
   
   try {
-    // Force UTC interpretation by ensuring it ends with Z if no offset is present
-    const utcDateString = dateString.includes('Z') || dateString.includes('+') 
-      ? dateString 
-      : `${dateString.replace(' ', 'T')}Z`;
-
-    const date = new Date(utcDateString);
-    
-    if (isNaN(date.getTime())) return "Invalid Date";
+    const date = parseToUTC(dateString);
 
     // Use Intl.DateTimeFormat to explicitly convert to local time
     return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
       hour: 'numeric',
       minute: 'numeric',
       hour12: true,
@@ -44,11 +48,7 @@ export function formatToLocalFullDate(dateString: string | undefined | null) {
   if (!dateString) return "";
   
   try {
-    const utcDateString = dateString.includes('Z') || dateString.includes('+') 
-      ? dateString 
-      : `${dateString.replace(' ', 'T')}Z`;
-
-    const date = new Date(utcDateString);
+    const date = parseToUTC(dateString);
     
     return new Intl.DateTimeFormat('en-US', {
       month: 'long',

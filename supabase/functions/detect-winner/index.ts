@@ -100,6 +100,11 @@ Deno.serve(async (req) => {
     const vaultPassword = Deno.env.get("VAULT_PASSWORD");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get request body for potential triggers
+    const body = await req.json().catch(() => ({}));
+    const triggeredBy = body.triggered_by || "manual";
+    const forceFinalize = body.force_finalize === true;
+
     // Check for open rounds where prediction time has ended
     const { data: openRound } = await supabase
       .from("prediction_rounds")
@@ -115,9 +120,16 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const endTime = new Date(openRound.end_time);
+    
+    // Add a 2-minute buffer for clock skew between client and server
+    // If client/cron triggers it and we're within 2 minutes of end, accept it.
+    const isPastEndTime = now >= endTime;
+    const isWithinSkewBuffer = now.getTime() >= (endTime.getTime() - 120000);
+    const shouldFinalize = isPastEndTime || (forceFinalize && isWithinSkewBuffer) || (triggeredBy === "cron" && isWithinSkewBuffer);
 
     // If round has ended (prediction end time passed), process immediately
-    if (now >= endTime) {
+    if (shouldFinalize) {
+      console.log(`Finalizing round ${openRound.id}. Triggered by: ${triggeredBy}. Past end: ${isPastEndTime}. Force: ${forceFinalize}`);
       return await processWinnerDetection(supabase, openRound, lovableApiKey, vaultUrl, vaultPassword, corsHeaders);
     }
 
@@ -130,7 +142,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ message: "Round still active", end_time: openRound.end_time }), {
+    return new Response(JSON.stringify({ message: "Round still active", end_time: openRound.end_time, server_time: now.toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
@@ -155,50 +167,6 @@ async function processLiveDetection(
   const predictionStart = round.prediction_start_time || round.start_time;
   const now = new Date();
   const endTime = new Date(round.end_time);
-
-  // If prediction window has ended, check for winner or mark as no winner
-  if (now >= endTime) {
-    // Get all tweets during the prediction window
-    const { data: tweets } = await supabase
-      .from("tweets")
-      .select("*")
-      .gte("created_at_twitter", predictionStart)
-      .lte("created_at_twitter", round.end_time)
-      .order("created_at_twitter", { ascending: true });
-
-    if (!tweets || tweets.length === 0) {
-      // No tweets during prediction window - no winner
-      await handleNoWinner(supabase, round);
-      return new Response(
-        JSON.stringify({
-          winner_detected: false,
-          message: "No posts during prediction window. Pool carries to next round.",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check each tweet in order - first matching post/quote wins
-    for (const tweet of tweets) {
-      if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
-
-      const match = matchTweetToOption(tweet.text, options);
-      if (match) {
-        // Winner found! Finalize immediately
-        return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
-      }
-    }
-
-    // No match found - mark as no winner, pool carries over
-    await handleNoWinner(supabase, round);
-    return new Response(
-      JSON.stringify({
-        winner_detected: false,
-        message: "No post matched any prediction option. Pool carries to next round.",
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
 
   // Still within prediction window - check for matching tweets
   const { data: tweets } = await supabase
@@ -285,11 +253,30 @@ async function processWinnerDetection(
 }
 
 async function handleNoWinner(supabase: any, round: any) {
+  // Get wallet config for payout percentage
+  const { data: walletConfig } = await supabase
+    .from("wallet_config")
+    .select("payout_percentage")
+    .single();
+
+  const payoutPercentage = walletConfig?.payout_percentage || 20;
+
+  // Get vault balance
+  const { data: balances } = await supabase.from("wallet_balances").select("*").single();
+  const vaultBalance = balances?.vault_balance_sol || 0;
+  const accumulatedFromPrev = round.accumulated_from_previous || 0;
+  
+  // Calculate potential payout (what would have been paid if there was a winner)
+  const basePayout = vaultBalance * (payoutPercentage / 100);
+  const totalPotentialPayout = basePayout + accumulatedFromPrev;
+
   await supabase
     .from("prediction_rounds")
     .update({
       status: "no_winner",
       finalized_at: new Date().toISOString(),
+      vault_balance_snapshot: vaultBalance,
+      payout_amount: totalPotentialPayout,
     })
     .eq("id", round.id);
 }
@@ -332,6 +319,21 @@ async function finalizeRound(
   // Only the first (earliest) vote is considered the winner
   const earliestWinningVote = winningVotes && winningVotes.length > 0 ? [winningVotes[0]] : [];
   const winnerCount = earliestWinningVote.length;
+
+  // If no one voted for the winning option, treat it as a "no winner" round
+  // so the pool carries over correctly.
+  if (winnerCount === 0) {
+    console.log("Option matched but no one voted for it. Handling as no_winner.");
+    await handleNoWinner(supabase, round);
+    return new Response(
+      JSON.stringify({
+        winner_detected: true,
+        winning_option: winningOption.label,
+        message: "Option matched but no voters found. Pool carries to next round.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   // Get wallet config for payout percentage
   const { data: walletConfig } = await supabase
@@ -431,7 +433,7 @@ async function finalizeRound(
 
   // Update payout stats
   const { data: stats } = await supabase.from("payout_stats").select("*").single();
-  if (stats) {
+  if (stats && winnerCount > 0) {
     await supabase
       .from("payout_stats")
       .update({
