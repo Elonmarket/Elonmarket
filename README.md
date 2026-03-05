@@ -2,6 +2,7 @@
 
 MuskMarket is a decentralized, free-to-play prediction marketplace where users predict what Elon Musk will post first next on X. Will it be about Grok, Starlink, Tesla, or X? Winners automatically receive SOL rewards directly in their wallets—no manual claims, no gas interactions, and no complex wallet connections.
 
+
 **Simple. Transparent. Automated.**
 
 ![MuskMarket Banner](/public/musk-logo1.jpg)
