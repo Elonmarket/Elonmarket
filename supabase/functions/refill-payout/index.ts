@@ -57,35 +57,9 @@ const corsHeaders = {
 
     // No refill for no_winner rounds
     if (round.status === "no_winner") {
-      // Get next round and add accumulated amount
-      const { data: nextRound } = await supabase
-        .from("prediction_rounds")
-        .select("*")
-        .gt("round_number", round.round_number)
-        .order("round_number", { ascending: true })
-        .limit(1)
-        .single();
-
-      if (nextRound) {
-        const { data: walletConfig } = await supabase
-          .from("wallet_config")
-          .select("payout_percentage")
-          .single();
-
-        const percentage = walletConfig?.payout_percentage || 15;
-        const wouldHavePaid = (vaultBalance * percentage) / 100;
-
-        await supabase
-          .from("prediction_rounds")
-          .update({
-            accumulated_from_previous: (nextRound.accumulated_from_previous || 0) + wouldHavePaid,
-          })
-          .eq("id", nextRound.id);
-      }
-
       return new Response(
         JSON.stringify({
-          message: "No winner - amount accumulated to next round",
+          message: "No winner - no payout",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -101,11 +75,9 @@ const corsHeaders = {
 
     const percentage = walletConfig?.payout_percentage || 15;
     const totalWinners = round.total_winners || 1;
-    const accumulated = round.accumulated_from_previous || 0;
 
     // Calculate payout
-    const basePayout = (vaultBalance * percentage) / 100;
-    const totalPayout = basePayout + accumulated;
+    const totalPayout = (vaultBalance * percentage) / 100;
     const perWinnerPayout = totalPayout / totalWinners;
 
     // Update round with payout info

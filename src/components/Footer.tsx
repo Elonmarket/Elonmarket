@@ -8,10 +8,9 @@ export const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-green to-neon-cyan flex items-center justify-center">
-                <Target className="w-4 h-4 text-background" />
-              </div>
-              <h3 className="font-display font-semibold text-lg">MUSKMARKET</h3>
+              <div className="h-12 md:h-16 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
+              <img src="/musk-logo.png" alt="Musk Market" className="h-full w-auto object-contain" />
+            </div>
             </div>
             <p className="text-muted-foreground text-sm max-w-xs">
               Free-to-play prediction market. Predict Elon's tweets, win SOL.

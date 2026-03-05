@@ -198,6 +198,7 @@ Deno.serve(async (req) => {
       })
       .eq("id", profile.id);
 
+    /* 
     // Add to recent winners
     if (unclaimedRounds.length > 0) {
       await supabase.from("recent_winners").insert({
@@ -207,6 +208,7 @@ Deno.serve(async (req) => {
         amount: claimAmount,
       });
     }
+    */
 
     return new Response(
       JSON.stringify({

@@ -60,10 +60,10 @@ export function useLeaderboard() {
         setLeaderboard(entries);
       }
 
-      // Fetch recent winners
+      // Fetch recent winners - ordered by round_number desc
       const { data: winners } = await supabase
         .from("recent_winners")
-        .select("*")
+        .select("*, prediction_rounds(round_number)")
         .order("created_at", { ascending: false })
         .limit(10);
 

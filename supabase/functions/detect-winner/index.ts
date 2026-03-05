@@ -224,7 +224,7 @@ async function processWinnerDetection(
     return new Response(
       JSON.stringify({
         winner_detected: false,
-        message: "No posts during prediction window. Pool carries to next round.",
+        message: "No posts during prediction window. Round ended with no winners.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -240,12 +240,12 @@ async function processWinnerDetection(
     }
   }
 
-  // No match found - mark as no winner, pool carries over
+  // No match found - mark as no winner
   await handleNoWinner(supabase, round);
   return new Response(
     JSON.stringify({
       winner_detected: false,
-      message: "No post matched any prediction option. Pool carries to next round.",
+      message: "No post matched any prediction option. Round ended with no winners.",
       first_tweet: tweets[0]?.text,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -264,11 +264,9 @@ async function handleNoWinner(supabase: any, round: any) {
   // Get vault balance
   const { data: balances } = await supabase.from("wallet_balances").select("*").single();
   const vaultBalance = balances?.vault_balance_sol || 0;
-  const accumulatedFromPrev = round.accumulated_from_previous || 0;
   
   // Calculate potential payout (what would have been paid if there was a winner)
-  const basePayout = vaultBalance * (payoutPercentage / 100);
-  const totalPotentialPayout = basePayout + accumulatedFromPrev;
+  const totalPotentialPayout = vaultBalance * (payoutPercentage / 100);
 
   await supabase
     .from("prediction_rounds")
@@ -277,6 +275,7 @@ async function handleNoWinner(supabase: any, round: any) {
       finalized_at: new Date().toISOString(),
       vault_balance_snapshot: vaultBalance,
       payout_amount: totalPotentialPayout,
+      accumulated_from_previous: 0, // Ensure it's reset
     })
     .eq("id", round.id);
 }
@@ -321,7 +320,6 @@ async function finalizeRound(
   const winnerCount = earliestWinningVote.length;
 
   // If no one voted for the winning option, treat it as a "no winner" round
-  // so the pool carries over correctly.
   if (winnerCount === 0) {
     console.log("Option matched but no one voted for it. Handling as no_winner.");
     await handleNoWinner(supabase, round);
@@ -329,7 +327,7 @@ async function finalizeRound(
       JSON.stringify({
         winner_detected: true,
         winning_option: winningOption.label,
-        message: "Option matched but no voters found. Pool carries to next round.",
+        message: "Option matched but no voters found. Round ended with no winners.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -346,11 +344,9 @@ async function finalizeRound(
   // Get vault balance
   const { data: balances } = await supabase.from("wallet_balances").select("*").single();
   const vaultBalance = balances?.vault_balance_sol || 0;
-  const accumulated = round.accumulated_from_previous || 0;
 
-  // Calculate payout: percentage of vault balance + accumulated
-  const basePayout = vaultBalance * (payoutPercentage / 100);
-  const totalPayout = basePayout + accumulated;
+  // Calculate payout: percentage of vault balance (NO accumulation)
+  const totalPayout = vaultBalance * (payoutPercentage / 100);
   const perWinnerPayout = winnerCount > 0 ? totalPayout / winnerCount : 0;
 
   // Finalize round
@@ -386,6 +382,14 @@ async function finalizeRound(
 
       winnersForVault.push({
         user: vote.wallet_address,
+        amount: perWinnerPayout,
+      });
+
+      // Also add to recent_winners table immediately so they show up on leaderboard
+      await supabase.from("recent_winners").insert({
+        round_id: round.id,
+        user_id: vote.user_id,
+        wallet_address: vote.wallet_address,
         amount: perWinnerPayout,
       });
     }

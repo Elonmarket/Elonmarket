@@ -123,22 +123,8 @@ Deno.serve(async (req) => {
 
         const newRoundNumber = (lastRound?.round_number || 0) + 1;
 
-        // Calculate accumulated from previous no_winner rounds
-        // We only need the latest round's payout if it was a no_winner, 
-        // because it already includes all previous accumulations.
+        // No accumulation from previous rounds
         let accumulated = 0;
-        const { data: lastRounds } = await supabase
-          .from("prediction_rounds")
-          .select("status, payout_amount, accumulated_from_previous")
-          .order("round_number", { ascending: false })
-          .limit(1);
-
-        if (lastRounds && lastRounds.length > 0) {
-          const last = lastRounds[0];
-          if (last.status === "no_winner") {
-            accumulated = (last.payout_amount || 0);
-          }
-        }
 
         const { data: newRound, error } = await supabase
           .from("prediction_rounds")

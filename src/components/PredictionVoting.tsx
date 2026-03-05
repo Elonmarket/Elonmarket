@@ -141,8 +141,7 @@ export const PredictionVoting = () => {
   // Calculate current payout from live vault balance
   const vaultBalance = walletBalances?.vault_balance_sol || 0;
   const payoutPercentage = walletConfig?.payout_percentage || 20;
-  const currentPayout = (vaultBalance * payoutPercentage) / 100 + (currentRound?.accumulated_from_previous || 0);
-
+  const currentPayout = (vaultBalance * payoutPercentage) / 100;
   const isRoundOpen = currentRound?.status === "open";
   const isRoundFinalized = currentRound?.status === "finalized" || currentRound?.status === "paid" || currentRound?.status === "no_winner";
   const canVote = isRoundOpen && !isVoteLocked;
@@ -379,14 +378,6 @@ export const PredictionVoting = () => {
                     {currentPayout.toFixed(4)} SOL
                   </p>
                 </div>
-
-                {(currentRound?.accumulated_from_previous || 0) > 0 && (
-                  <div className="p-2.5 rounded-lg bg-neon-purple/10 border border-neon-purple/30">
-                    <p className="text-xs text-neon-purple font-medium">
-                      +{(currentRound?.accumulated_from_previous || 0).toFixed(4)} SOL accumulated from previous rounds
-                    </p>
-                  </div>
-                )}
               </CardContent>
             </Card>
 

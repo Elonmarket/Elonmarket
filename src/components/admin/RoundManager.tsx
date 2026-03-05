@@ -82,7 +82,7 @@ export const RoundManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
     const { data } = await supabase
       .from("prediction_rounds")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("round_number", { ascending: false })
       .limit(10);
     if (data) setRounds(data as PredictionRound[]);
   };

@@ -46,17 +46,19 @@ export function usePredictionRound() {
     try {
       setLoading(true);
 
-      // Get current open round
+      // Get current open round - pick the one with highest round_number if multiple are open
       const { data: openRound } = await supabase
         .from("prediction_rounds")
         .select("*")
         .eq("status", "open")
+        .order("round_number", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       let round = openRound;
 
       if (!round) {
-        // Try upcoming round
+        // Try upcoming round - pick the one starting soonest
         const { data: upcomingRound } = await supabase
           .from("prediction_rounds")
           .select("*")
@@ -69,12 +71,12 @@ export function usePredictionRound() {
       }
 
       if (!round) {
-        // Get latest finalized round
+        // Get latest finalized round by round_number
         const { data: latestRound } = await supabase
           .from("prediction_rounds")
           .select("*")
           .in("status", ["finalized", "paid", "no_winner"])
-          .order("finalized_at", { ascending: false })
+          .order("round_number", { ascending: false })
           .limit(1)
           .maybeSingle();
 

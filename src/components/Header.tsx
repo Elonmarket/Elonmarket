@@ -32,10 +32,10 @@ export const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center group">
-            <div className="h-10 md:h-12 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
+            <div className="h-12 md:h-16 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
               <img src="/musk-logo.png" alt="Musk Market" className="h-full w-auto object-contain" />
             </div>
           </Link>

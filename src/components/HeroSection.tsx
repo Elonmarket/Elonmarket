@@ -67,7 +67,7 @@ export const HeroSection = () => {
             <span className={`w-2 h-2 rounded-full ${status.color.replace('text-', 'bg-')} ${status.pulse ? 'animate-pulse' : ''}`} />
             <span className={`text-sm font-medium ${status.color}`}>{status.label}</span>
             <span className="text-sm text-muted-foreground">•</span>
-            <span className="text-sm text-neon-green font-medium">{vaultBalanceSOL.toFixed(4)} SOL Secured</span>
+            <span className="text-sm text-neon-green font-medium">{vaultBalanceSOL.toFixed(4)} SOL Pool</span>
           </div>
 
           {/* Main Title */}
