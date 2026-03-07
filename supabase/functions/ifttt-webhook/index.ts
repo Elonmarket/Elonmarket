@@ -55,14 +55,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Skip retweets (RSS often formats as "RT by @elonmusk: ...").
-    // We only want posts/quote-posts for winner detection.
+    // Retweets in RSS sometimes appear as "RT by @elonmusk: ...".
+    // We no longer skip these so that pure reposts can still be part of the game.
     if (/^RT by\s+@/i.test(tweetText)) {
-      console.log("Skipping retweet:", tweetText.slice(0, 120));
-      return new Response(
-        JSON.stringify({ success: true, skipped: true, reason: "retweet" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log("Treating retweet as repost:", tweetText.slice(0, 120));
     }
 
     // ── Filter out replies (not posts that happen to start with @) ──
@@ -176,8 +172,8 @@ Deno.serve(async (req) => {
 
         console.log("Tweet stored:", tweetId);
 
-        // Trigger winner detection
-        await fetch(`${supabaseUrl}/functions/v1/detect-winner`, {
+        // Trigger winner detection in background — do NOT await (avoids 504 Gateway Timeout)
+        fetch(`${supabaseUrl}/functions/v1/detect-winner`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

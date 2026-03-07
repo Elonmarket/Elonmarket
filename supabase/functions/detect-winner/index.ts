@@ -5,6 +5,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Combined text for matching: main tweet + quoted tweet (so quote RTs can win on the quoted content). */
+function getTweetTextForMatching(tweet: { text?: string | null; quoted_tweet_text?: string | null }): string {
+  return [tweet.text ?? "", tweet.quoted_tweet_text ?? ""].filter(Boolean).join("\n");
+}
+
 /**
  * Exact word matching for prediction options.
  * For option "X": only matches standalone "X" or "X.com", NOT "text" or "example".
@@ -187,7 +192,7 @@ async function processLiveDetection(
     // Only consider posts and quoted reposts (not comments/standard reposts)
     if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
 
-    const match = matchTweetToOption(tweet.text, options);
+    const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {
       // Winner found! Finalize immediately
       return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
@@ -230,11 +235,11 @@ async function processWinnerDetection(
     );
   }
 
-  // Check each tweet in order - first matching post/quote wins
+  // Check each tweet in order - first matching post/quote wins (main + quoted text both count)
   for (const tweet of tweets) {
     if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
 
-    const match = matchTweetToOption(tweet.text, options);
+    const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {
       return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
     }

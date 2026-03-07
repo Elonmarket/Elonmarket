@@ -1,19 +1,36 @@
-import 'dotenv/config';
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
+
+// Load .env from the same directory as this script (so PM2 picks it up no matter where it's started from).
+// 'override: true' ensures the values in this .env win over any existing env vars set by PM2 or the shell.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, ".env"), override: true });
 
 const NITTER_BASE_URL = process.env.NITTER_BASE_URL;
 const SUPABASE_WEBHOOK_URL = process.env.SUPABASE_WEBHOOK_URL;
 const WEBHOOK_SECRET = process.env.IFTTT_WEBHOOK_SECRET || "";
 // Set NITTER_INCLUDE_REPLIES=false to use default feed (excludes tweets starting with @)
 const INCLUDE_REPLIES = process.env.NITTER_INCLUDE_REPLIES !== "false";
-// Optional: profile username for logs (e.g. elonmusk or nipahvirus2026)
-const PROFILE_USERNAME = process.env.PROFILE_USERNAME || "elonmusk";
+
+// Raw env values (for debugging issues like trailing spaces, wrong key names, etc.)
+const RAW_PROFILE_ENV = process.env.PROFILE_USERNAME;
+const RAW_DISPLAY_ENV = process.env.USER_DISPLAY_NAME;
+
+// Which account to poll: RSS path and author (e.g. elonmusk or moazzammmm77)
+const PROFILE_USERNAME = (RAW_PROFILE_ENV ?? "").trim() || "elonmusk";
+// Display name shown in app for tweets (e.g. "Elon Musk" or "Your Name")
+const USER_DISPLAY_NAME = (RAW_DISPLAY_ENV ?? "").trim() || "Elon Musk";
 
 if (!NITTER_BASE_URL || !SUPABASE_WEBHOOK_URL) {
   console.error("Missing NITTER_BASE_URL or SUPABASE_WEBHOOK_URL");
   process.exit(1);
 }
+
+console.log("Loaded env PROFILE_USERNAME raw =", JSON.stringify(RAW_PROFILE_ENV));
+console.log("Using PROFILE_USERNAME:", PROFILE_USERNAME);
 
 let lastTweetId = null;
 
@@ -43,7 +60,6 @@ function parseQuoteFromDescription(title, description) {
 async function poll() {
   try {
     // Use with_replies to include tweets that start with @ (e.g. "@Tesla is working hard")
-    // Default /rss excludes replies; with_replies includes them for winner detection
     const feedPath = INCLUDE_REPLIES ? `${PROFILE_USERNAME}/with_replies/rss` : `${PROFILE_USERNAME}/rss`;
     const rssUrl = `${NITTER_BASE_URL.replace(/\/$/, "")}/${feedPath}`;
     console.log("Polling RSS:", rssUrl);
@@ -55,8 +71,7 @@ async function poll() {
 
     const xml = await res.text();
     const parsed = await parseStringPromise(xml);
-    
-    // Compatible version without optional chaining
+
     const channel = parsed && parsed.rss && parsed.rss.channel && parsed.rss.channel[0];
     const items = (channel && channel.item) || [];
 
@@ -75,7 +90,7 @@ async function poll() {
         text: mainText,
         tweet_url: link,
         created_at: pubDate,
-        user_name: "Elon Musk",
+        user_name: USER_DISPLAY_NAME,
         author_username: PROFILE_USERNAME,
         tweet_type: quotedTweetText ? "quote" : "post",
       };

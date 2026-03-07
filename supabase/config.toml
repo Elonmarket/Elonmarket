@@ -1,8 +1,5 @@
 project_id = "xzswyicqxtocruvjyqlf"
 
-[functions.fetch-tweets]
-verify_jwt = false
-
 [functions.submit-vote]
 verify_jwt = false
 

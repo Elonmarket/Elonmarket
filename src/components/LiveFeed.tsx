@@ -34,6 +34,8 @@ const optionIcons: Record<string, string> = {
   Starlink: "/spacex-logo.png",
 };
 
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const detectMatchingOptions = (text: string, options: string[]): string[] => {
   // IMPORTANT: this must match the backend spirit:
   // - exact word matching (case-insensitive)
@@ -43,14 +45,10 @@ const detectMatchingOptions = (text: string, options: string[]): string[] => {
   const matches: string[] = [];
   const raw = text ?? "";
 
-  const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
   for (const option of options) {
     if (!option) continue;
 
     if (option === "X") {
-      // Match standalone X or X.com
-      // \b ensures we don't match "SpaceX" because "e" and "X" are both word chars, so no boundary exists.
       const standaloneX = /\bX\b/;
       const xCom = /\bx\.com\b/i;
       if (standaloneX.test(raw) || xCom.test(raw)) matches.push(option);
@@ -68,8 +66,67 @@ const detectMatchingOptions = (text: string, options: string[]): string[] => {
   return matches;
 };
 
+/** Split text into segments and wrap matching option keywords in <mark> for highlighting. */
+function highlightMatchesInText(text: string, options: string[]): React.ReactNode {
+  if (!text || options.length === 0) return text;
+  const raw = text;
+  let segments: { str: string; match: string | null }[] = [{ str: raw, match: null }];
+
+  for (const option of options) {
+    if (option === "X") {
+      const re = /\b(X)\b|(\bx\.com\b)/gi;
+      segments = segments.flatMap((seg) => {
+        if (seg.match) return [seg];
+        const parts: { str: string; match: string | null }[] = [];
+        let last = 0;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(seg.str)) !== null) {
+          if (m.index > last) parts.push({ str: seg.str.slice(last, m.index), match: null });
+          parts.push({ str: m[0], match: option });
+          last = m.index + m[0].length;
+        }
+        if (last < seg.str.length) parts.push({ str: seg.str.slice(last), match: null });
+        return parts.length ? parts : [seg];
+      });
+      continue;
+    }
+    const kw = escapeRegex(option);
+    const re = new RegExp(`(?<![a-zA-Z0-9@#])(${kw})(?![a-zA-Z0-9])|(${kw}\\.com)|(@${kw}\\b)`, "gi");
+    segments = segments.flatMap((seg) => {
+      if (seg.match) return [seg];
+      const parts: { str: string; match: string | null }[] = [];
+      let last = 0;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(seg.str)) !== null) {
+        if (m.index > last) parts.push({ str: seg.str.slice(last, m.index), match: null });
+        parts.push({ str: m[0], match: option });
+        last = m.index + m[0].length;
+      }
+      if (last < seg.str.length) parts.push({ str: seg.str.slice(last), match: null });
+      return parts.length ? parts : [seg];
+    });
+  }
+
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.match ? (
+          <mark key={i} className={`rounded px-0.5 ${optionColors[seg.match] || "bg-primary/30 text-primary"}`}>
+            {seg.str}
+          </mark>
+        ) : (
+          seg.str
+        )
+      )}
+    </>
+  );
+}
+
+// Match on main text + quoted text so quote RTs (e.g. "Tesla" in quoted content) are detected
+const getTextForMatching = (t: Tweet) => [t.text, t.quoted_tweet_text].filter(Boolean).join("\n");
+
 const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet: Tweet; index: number; predictionOptions: string[] }, ref: React.ForwardedRef<HTMLDivElement>) => {
-  const matchingOptions = detectMatchingOptions(tweet.text, predictionOptions);
+  const matchingOptions = detectMatchingOptions(getTextForMatching(tweet), predictionOptions);
   const hasMatch = matchingOptions.length > 0;
   const postDate = new Date(tweet.created_at_twitter);
   const [timeAgo, setTimeAgo] = useState("");
@@ -159,7 +216,9 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
 
             {tweet.tweet_type === "quote" && tweet.quoted_tweet_text && (
               <div className="mt-3 p-2 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground line-clamp-2">
-                <p className="italic">"{tweet.quoted_tweet_text.slice(0, 100)}{tweet.quoted_tweet_text.length > 100 ? "…" : ""}"</p>
+                <p className="italic">
+                  "{highlightMatchesInText(tweet.quoted_tweet_text.slice(0, 200) + (tweet.quoted_tweet_text.length > 200 ? "…" : ""), matchingOptions)}"
+                </p>
               </div>
             )}
           </div>
