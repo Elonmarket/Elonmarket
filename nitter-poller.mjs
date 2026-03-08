@@ -54,6 +54,14 @@ function parseQuoteFromDescription(title, description) {
     const quotedTweetText = stripHtml(blockquoteMatch[1]).trim();
     return { mainText, quotedTweetText: quotedTweetText || null };
   }
+
+  // If this is a pure retweet ("RT by @...") and there's no blockquote,
+  // treat the full description text as the quoted tweet so keywords match.
+  if (/^RT by\s+@/i.test(mainText)) {
+    const fullText = stripHtml(rawDesc).trim();
+    return { mainText, quotedTweetText: fullText || null };
+  }
+
   return { mainText, quotedTweetText: null };
 }
 
@@ -84,6 +92,12 @@ async function poll() {
       const pubDate = (item.pubDate && item.pubDate[0]) || new Date().toISOString();
 
       if (lastTweetId && guid <= lastTweetId) continue;
+
+      // Skip replies entirely: Nitter marks them as "R to @username: ..."
+      if (/^R to\s+@/i.test(title)) {
+        console.log("Skipping reply:", title.slice(0, 80));
+        continue;
+      }
 
       const { mainText, quotedTweetText } = parseQuoteFromDescription(title, description);
       const body = {

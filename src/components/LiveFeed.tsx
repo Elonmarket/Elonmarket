@@ -159,10 +159,9 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     : cleanText;
 
   const tweetUrl =
-    tweet.tweet_url ||
     (tweet.author_username && tweet.tweet_id
       ? `https://x.com/${tweet.author_username}/status/${tweet.tweet_id}`
-      : undefined);
+      : undefined) || tweet.tweet_url;
 
   return (
     <motion.div
