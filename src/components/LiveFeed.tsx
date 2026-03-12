@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ExternalLink, RefreshCw, Sparkles, User } from "lucide-react";
+import { ExternalLink, RefreshCw, Sparkles, User, Repeat2, Quote } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,8 +51,9 @@ const detectMatchingOptions = (text: string, options: string[]): string[] => {
 
     if (option === "X") {
       const standaloneX = /\bX\b/;
+      const unicodeX = /𝕏/;
       const xCom = /\bx\.com\b/i;
-      if (standaloneX.test(raw) || xCom.test(raw)) matches.push(option);
+      if (standaloneX.test(raw) || unicodeX.test(raw) || xCom.test(raw)) matches.push(option);
       continue;
     }
 
@@ -75,7 +76,7 @@ function highlightMatchesInText(text: string, options: string[]): React.ReactNod
 
   for (const option of options) {
     if (option === "X") {
-      const re = /\b(X)\b|(\bx\.com\b)/gi;
+      const re = /\b(X)\b|(\bx\.com\b)|(𝕏)/gi;
       segments = segments.flatMap((seg) => {
         if (seg.match) return [seg];
         const parts: { str: string; match: string | null }[] = [];
@@ -153,6 +154,10 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     return () => clearInterval(interval);
   }, [postDate.getTime()]);
 
+  // Detect if it's a pure repost based on poller logic
+  const isRepost = tweet.text.toLowerCase().startsWith("rt by @");
+  const isQuote = tweet.tweet_type === "quote" && !isRepost;
+
   // Preserve @mentions (e.g. @Tesla, @SpaceX) - only collapse extra spaces
   const cleanText = tweet.text.replace(/\s{2,}/g, " ").trim();
   const truncatedText = cleanText.length > 180
@@ -174,13 +179,13 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     >
       <Card
         className={`relative bg-card/60 border-border hover:bg-card/80 transition-all duration-300 p-4 overflow-hidden h-full flex flex-col ${
-          hasMatch ? "ring-1 ring-neon-green/30" : ""
+          hasMatch ? "ring-1 ring-neon-green/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : ""
         }`}
         {...(tweetUrl
           ? {
               onClick: () => window.open(tweetUrl, "_blank", "noopener,noreferrer"),
               className: `relative bg-card/60 border-border hover:bg-card/80 transition-all duration-300 p-4 overflow-hidden h-full flex flex-col ${
-                hasMatch ? "ring-1 ring-neon-green/30" : ""
+                hasMatch ? "ring-1 ring-neon-green/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : ""
               } cursor-pointer`,
             }
           : {})}
@@ -189,7 +194,15 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
           <div className="absolute inset-0 bg-gradient-to-br from-neon-green/5 to-transparent pointer-events-none" />
         )}
 
-        <div className="relative flex gap-3">
+        {/* Repost Indicator (at top) */}
+        {isRepost && (
+          <div className="flex items-center gap-1.5 mb-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider ml-1">
+            <Repeat2 className="w-3.5 h-3.5 text-neon-green/70" />
+            <span>{tweet.author_name || "Elon Musk"} Reposted</span>
+          </div>
+        )}
+
+        <div className="relative flex gap-3 h-full">
           {tweet.author_avatar ? (
             <img
               src={tweet.author_avatar}
@@ -207,9 +220,27 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
               <span className="text-muted-foreground text-xs">· {timeAgo}</span>
             </div>
 
-            <p className="text-foreground mt-2 text-sm leading-relaxed break-words flex-1">
-              {truncatedText}
-            </p>
+            {/* Only show main text if it's not a pure RT header */}
+            {!isRepost && (
+              <p className="text-foreground mt-1.5 text-sm leading-relaxed break-words">
+                {truncatedText}
+              </p>
+            )}
+
+            {/* Quoted/Reposted Content */}
+            {tweet.quoted_tweet_text && (
+              <div className={`mt-3 p-3 rounded-xl border border-border/50 bg-muted/20 relative group overflow-hidden flex-1 flex flex-col justify-center min-h-[60px] ${isRepost ? 'border-neon-green/20 bg-neon-green/5' : ''}`}>
+                {isQuote && <Quote className="absolute -top-1 -right-1 w-8 h-8 text-foreground/5 pointer-events-none" />}
+                {isRepost && (
+                  <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1.5 font-bold opacity-60">
+                    Original Post
+                  </div>
+                )}
+                <p className={`text-foreground text-sm leading-relaxed italic relative z-10 ${isRepost ? 'line-clamp-6' : 'line-clamp-3'}`}>
+                  {highlightMatchesInText(tweet.quoted_tweet_text, matchingOptions)}
+                </p>
+              </div>
+            )}
 
             {hasMatch && (
               <div className="flex flex-wrap gap-1.5 mt-3">
@@ -227,20 +258,13 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
                 ))}
               </div>
             )}
-
-            {tweet.tweet_type === "quote" && tweet.quoted_tweet_text && (
-              <div className="mt-3 p-2 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground line-clamp-2">
-                <p className="italic">
-                  "{highlightMatchesInText(tweet.quoted_tweet_text.slice(0, 200) + (tweet.quoted_tweet_text.length > 200 ? "…" : ""), matchingOptions)}"
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </Card>
     </motion.div>
   );
 });
+
 
 TweetCard.displayName = "TweetCard";
 

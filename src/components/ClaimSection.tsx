@@ -199,12 +199,33 @@ export const ClaimSection = () => {
                         />
                       </div>
                       <p className="text-neon-green font-display font-bold text-3xl mb-2">
-                        You won {claimInfo.unclaimedRewards.toFixed(6)} Sol
+                        You won {claimInfo.unclaimedRewards.toFixed(6)} SOL
                       </p>
                       <p className="text-base text-white/80 font-medium">
                         Sent automatically to your wallet address
                       </p>
+                      <p className="text-[10px] text-muted-foreground mt-2 italic">
+                        (Manual claim available below as backup)
+                      </p>
                       
+                      <div className="mt-6">
+                        <Button
+                          variant="neon"
+                          className="w-full h-12 text-lg font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                          onClick={handleClaim}
+                          disabled={claimLoading}
+                        >
+                          {claimLoading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                              Processing...
+                            </div>
+                          ) : (
+                            "MANUAL CLAIM"
+                          )}
+                        </Button>
+                      </div>
+
                       {winningTweetTime && (
                         <div className="mt-6 pt-6 border-t border-neon-green/20">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-1">

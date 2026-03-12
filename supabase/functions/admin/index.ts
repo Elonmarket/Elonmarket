@@ -116,15 +116,19 @@ Deno.serve(async (req) => {
       case "create_round": {
         const { data: lastRound } = await supabase
           .from("prediction_rounds")
-          .select("round_number")
+          .select("round_number, status, payout_amount, accumulated_from_previous")
           .order("round_number", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         const newRoundNumber = (lastRound?.round_number || 0) + 1;
 
-        // No accumulation from previous rounds
+        // Fetch accumulation from previous rounds if they ended in no_winner
         let accumulated = 0;
+        if (lastRound && lastRound.status === "no_winner") {
+          accumulated = Number(lastRound.accumulated_from_previous || 0) + Number(lastRound.payout_amount || 0);
+          console.log(`Accumulating rewards from Round ${lastRound.round_number}: ${accumulated} SOL`);
+        }
 
         const { data: newRound, error } = await supabase
           .from("prediction_rounds")
@@ -145,13 +149,20 @@ Deno.serve(async (req) => {
 
         // Add options
         if (data.options && data.options.length > 0) {
-          const optionsToInsert = data.options.map((opt: any) => ({
-            round_id: newRound.id,
-            label: opt.label,
-            keywords: opt.keywords || [opt.label.toLowerCase()],
-            color: opt.color || "#00FF88",
-            icon: opt.icon || "zap",
-          }));
+          const optionsToInsert = data.options.map((opt: any) => {
+            const keywords = opt.keywords || [opt.label.toLowerCase()];
+            // If the option is "X", always ensure 𝕏 is a keyword
+            if (opt.label === "X" && !keywords.includes("𝕏")) {
+              keywords.push("𝕏");
+            }
+            return {
+              round_id: newRound.id,
+              label: opt.label,
+              keywords: keywords,
+              color: opt.color || "#00FF88",
+              icon: opt.icon || "zap",
+            };
+          });
 
           await supabase.from("prediction_options").insert(optionsToInsert);
         }

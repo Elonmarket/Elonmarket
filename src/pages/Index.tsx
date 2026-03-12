@@ -5,6 +5,7 @@ import { PredictionVoting } from "@/components/PredictionVoting";
 import { ClaimSection } from "@/components/ClaimSection";
 import { Leaderboard } from "@/components/Leaderboard";
 import { Footer } from "@/components/Footer";
+import { RoundResultDialog } from "@/components/RoundResultDialog";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
         <Leaderboard />
       </main>
       <Footer />
+      <RoundResultDialog />
     </div>
   );
 };

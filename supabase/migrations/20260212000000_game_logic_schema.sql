@@ -45,5 +45,5 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.game_config;
 
 -- 4. Insert default game_config row if table is empty
 INSERT INTO public.game_config (id, default_options, posts_to_display, cooldown_minutes, rss_feed_url)
-SELECT gen_random_uuid(), ARRAY['Grok', 'Tesla', 'SpaceX', 'Starlink', 'X', 'Doge'], 6, 30, ''
+SELECT gen_random_uuid(), ARRAY['Grok', 'Tesla', 'SpaceX', 'Starlink', 'X', '𝕏', 'Doge'], 6, 30, ''
 WHERE NOT EXISTS (SELECT 1 FROM public.game_config LIMIT 1);

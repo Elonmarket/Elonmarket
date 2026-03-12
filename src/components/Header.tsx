@@ -45,7 +45,7 @@ export const Header = () => {
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Total Paid</p>
               <p className="font-display font-semibold text-neon-green text-sm">
-                ${(payoutStats?.total_paid_usd || 0).toLocaleString()}
+                {(payoutStats?.total_paid_usd || 0).toLocaleString()}
               </p>
             </div>
             <div className="text-center">
@@ -138,6 +138,13 @@ export const Header = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Feed
+              </a>
+              <a 
+                href="/docs" 
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Docs
               </a>
               <a
                 href="#predict"

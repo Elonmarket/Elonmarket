@@ -142,7 +142,9 @@ export const PredictionVoting = () => {
   // Calculate current payout from live vault balance
   const vaultBalance = walletBalances?.vault_balance_sol || 0;
   const payoutPercentage = walletConfig?.payout_percentage || 20;
-  const currentPayout = (vaultBalance * payoutPercentage) / 100;
+  const accumulation = Number(currentRound?.accumulated_from_previous || 0);
+  const basePayout = (vaultBalance * payoutPercentage) / 100;
+  const currentPayout = basePayout + accumulation;
   const isRoundOpen = currentRound?.status === "open";
   const isRoundFinalized = currentRound?.status === "finalized" || currentRound?.status === "paid" || currentRound?.status === "no_winner";
   const canVote = isRoundOpen && !isVoteLocked;
@@ -370,11 +372,29 @@ export const PredictionVoting = () => {
 
                 <div className="h-px bg-border" />
 
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">This Round ({payoutPercentage}%)</p>
-                  <p className="font-display text-xl font-semibold text-neon-cyan tracking-tight">
-                    {currentPayout.toFixed(4)} SOL
-                  </p>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-end">
+                    <p className="text-xs text-muted-foreground">This Round ({payoutPercentage}%)</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {basePayout.toFixed(4)} SOL
+                    </p>
+                  </div>
+                  
+                  {accumulation > 0 && (
+                    <div className="flex justify-between items-end">
+                      <p className="text-xs text-muted-foreground">Accumulated</p>
+                      <p className="text-sm font-medium text-neon-green">
+                        + {accumulation.toFixed(4)} SOL
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-border/50 flex justify-between items-end">
+                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Total Pool</p>
+                    <p className="font-display text-xl font-semibold text-neon-cyan tracking-tight">
+                      {currentPayout.toFixed(4)} SOL
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-4 p-2.5 rounded-lg bg-muted/30 border border-border/50 flex items-start gap-2.5">

@@ -28,20 +28,26 @@ function matchTweetToOption(tweetText: string, options: any[]): { option: any; k
     let matchPosition = -1;
     const matchedKeywords: string[] = [];
 
-    // Special handling for "X" - must be standalone X or X.com
+    // Special handling for "X" - must be standalone X, 𝕏, or X.com
     if (label === "X") {
-      // Match standalone "X" (e.g. "X", "@X", "#X") or "X.com"
-      // \b ensures we don't match "SpaceX" because "e" and "X" are both word chars, so no boundary exists.
+      // Match standalone "X" (ASCII), "𝕏" (Unicode symbol), or "x.com"
       const standaloneXRegex = /\bX\b/g;
+      const unicodeXRegex = /𝕏/g;
       const xComRegex = /\bx\.com\b/gi;
       
       const standaloneMatch = standaloneXRegex.exec(text);
+      const unicodeMatch = unicodeXRegex.exec(text);
       const xComMatch = xComRegex.exec(textLower);
       
-      if (standaloneMatch) {
+      if (unicodeMatch && (matchPosition === -1 || unicodeMatch.index < matchPosition)) {
+        matchPosition = unicodeMatch.index;
+        matchedKeywords.push("𝕏");
+      }
+      if (standaloneMatch && (matchPosition === -1 || standaloneMatch.index < matchPosition)) {
         matchPosition = standaloneMatch.index;
         matchedKeywords.push("X");
-      } else if (xComMatch) {
+      }
+      if (xComMatch && (matchPosition === -1 || xComMatch.index < matchPosition)) {
         matchPosition = xComMatch.index;
         matchedKeywords.push("X.com");
       }
@@ -280,7 +286,8 @@ async function handleNoWinner(supabase: any, round: any) {
       finalized_at: new Date().toISOString(),
       vault_balance_snapshot: vaultBalance,
       payout_amount: totalPotentialPayout,
-      accumulated_from_previous: 0, // Ensure it's reset
+      // We keep the current round's accumulated_from_previous so the NEXT round 
+      // can calculate total accumulated = (lastRound.accumulated + lastRound.payout_amount)
     })
     .eq("id", round.id);
 }
@@ -350,8 +357,9 @@ async function finalizeRound(
   const { data: balances } = await supabase.from("wallet_balances").select("*").single();
   const vaultBalance = balances?.vault_balance_sol || 0;
 
-  // Calculate payout: percentage of vault balance (NO accumulation)
-  const totalPayout = vaultBalance * (payoutPercentage / 100);
+  // Calculate payout: percentage of vault balance + accumulation from previous rounds
+  const currentRoundPayout = vaultBalance * (payoutPercentage / 100);
+  const totalPayout = currentRoundPayout + Number(round.accumulated_from_previous || 0);
   const perWinnerPayout = winnerCount > 0 ? totalPayout / winnerCount : 0;
 
   // Finalize round
@@ -365,7 +373,7 @@ async function finalizeRound(
       finalized_at: new Date().toISOString(),
       total_winners: winnerCount,
       vault_balance_snapshot: vaultBalance,
-      payout_amount: totalPayout,
+      payout_amount: currentRoundPayout, // This is the base payout for stats, but totalPayout is what's paid
       payout_per_winner: perWinnerPayout,
     })
     .eq("id", round.id);
