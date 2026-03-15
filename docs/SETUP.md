@@ -58,7 +58,7 @@ Follow these steps to set up the MuskMarket project locally for development.
 4. **Required Secrets:**
    Configure the secrets for the Edge Functions.
    ```bash
-   supabase secrets set VAULT_URL="http://64.176.63.197:8000"
+   supabase secrets set VAULT_URL="http://yourvps:8000"
    supabase secrets set VAULT_PASSWORD="your-api-key"
    supabase secrets set SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
    supabase secrets set IFTTT_WEBHOOK_SECRET="your-secret"
