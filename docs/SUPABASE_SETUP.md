@@ -82,7 +82,7 @@ npx supabase functions deploy
 
 | Secret | Required | Description |
 |--------|----------|-------------|
-| `ADMIN_SECRET_KEY` | **Yes** | Password for admin panel login (e.g. `65131200` or a strong random string). |
+| `ADMIN_SECRET_KEY` | **Yes** | Password for admin panel login (e.g. `12345` or a strong random string). |
 | `IFTTT_WEBHOOK_SECRET` | Optional | If set, IFTTT must send this in header `x-webhook-secret` or query `?secret=...`. |
 | `SOLANA_RPC_URL` | Optional | RPC for token checks (default: `https://api.mainnet-beta.solana.com`). |
 | `VAULT_URL` | Optional | Reward vault API base URL (for payouts). |
@@ -91,7 +91,7 @@ npx supabase functions deploy
 CLI example:
 
 ```bash
-npx supabase secrets set ADMIN_SECRET_KEY=65131200
+npx supabase secrets set ADMIN_SECRET_KEY=12345
 npx supabase secrets set IFTTT_WEBHOOK_SECRET=your_secret_if_you_use_it
 ```
 
@@ -99,8 +99,8 @@ npx supabase secrets set IFTTT_WEBHOOK_SECRET=your_secret_if_you_use_it
 
 ## 5. Admin panel access
 
-- URL: `https://your-app.com/admin65131200` (or `http://localhost:5173/admin65131200` in dev).
-- Log in with the **same value** you set for `ADMIN_SECRET_KEY` (e.g. `65131200`).
+- URL: `https://your-app.com/admin` (or `http://localhost:5173/admin` in dev).
+- Log in with the **same value** you set for `ADMIN_SECRET_KEY` (e.g. `12345`).
 
 ---
 
@@ -163,7 +163,7 @@ Each received tweet is stored and triggers winner detection.
 2. **Game settings:** Add default options (e.g. Grok, Tesla), Save.
 3. **Create round:** Set question, prediction window (start/end UTC), vote lock minutes, then “Create Round & Open Voting”.
 4. **Frontend:** Connect wallet (with enough tokens), pick an option, Submit. Refresh – you should still see “Vote submitted” (hasVoted from DB).
-5. **Simulate tweet:** Either use IFTTT with a test tweet, or insert a row into `tweets` in Table Editor with `text` containing one option (e.g. “Grok”), `created_at_twitter` in the round’s window, `tweet_type: post`, `author_id: 44196397`, then click **Check winner** in admin.
+5. **Simulate tweet:** Either use IFTTT with a test tweet, or insert a row into `tweets` in Table Editor with `text` containing one option (e.g. “Grok”), `created_at_twitter` in the round’s window, `tweet_type: post`, `author_id: 44096397`, then click **Check winner** in admin.
 6. **Cron:** If you set up the 2‑minute cron, leave a round past its end time and confirm it moves to cooldown then finalized/no_winner without clicking Check winner.
 
 ---
@@ -173,9 +173,9 @@ Each received tweet is stored and triggers winner detection.
 - [ ] Supabase project created and URL + anon key in `.env`
 - [ ] All migrations run (including `20260212000000_game_logic_schema.sql`)
 - [ ] Edge Functions deployed
-- [ ] `ADMIN_SECRET_KEY` set and used to log in at `/admin65131200`
+- [ ] `ADMIN_SECRET_KEY` set and used to log in at `/admin`
 - [ ] Wallet settings filled in (Wallets tab)
-- [ ] Optional: cron every 2 min to `detect-winner`
+- [ ] Optional: cron every intnt to `detect-winner`
 - [ ] Optional: IFTTT webhook pointing to `ifttt-webhook` URL
 
 After this, game logic (rounds, voting, vote lock, winner detection, hasVoted on refresh) is ready. Nitter and reward pool can be added next.
