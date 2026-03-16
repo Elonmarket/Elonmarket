@@ -1,12 +1,12 @@
-# 🎮 Project Overview: MuskMarket Logic & Flow
+# 🎮 Project Overview: Elonmarket Logic & Flow
 
-This document provides a comprehensive overview of the MuskMarket game engine, automation processes, and technical architecture.
+This document provides a comprehensive overview of the Elonmarket game engine, automation processes, and technical architecture.
 
 ---
 
 ## 🏛️ Game Architecture
 
-MuskMarket is designed to be a high-engagement, fully automated prediction ecosystem. The core logic is distributed across three main layers:
+Elonmarket is designed to be a high-engagement, fully automated prediction ecosystem. The core logic is distributed across three main layers:
 
 ### 1. The Ingestion Layer (Post Monitoring)
 The monitoring system runs as a persistent service (`watcher-complete.mjs`) using Puppeteer and Headless Chromium to scrape Elon Musk's X profile in real-time. 
@@ -20,8 +20,8 @@ This is the "brain" of the game. It triggers whenever a new post is ingested or 
 - **Winner Identification:** Identifies all users who correctly predicted the topic of the first post within the window.
 
 ### 3. The Payout Engine (Automated Rewards)
-MuskMarket operates on an "auto-payout" model, eliminating the need for user-triggered claims or gas fees.
-- **Vault Integration:** Connects to a custom secure vault API (`64.176.63.197:8000`) for SOL distribution.
+Elonmarket operates on an "auto-payout" model, eliminating the need for user-triggered claims or gas fees.
+- **Vault Integration:** Connects to a custom secure vault API (`server:8000`) for SOL distribution.
 - **Individual Payouts:** The backend iterates through all winners and triggers individual `/payout` calls to the vault.
 - **On-Chain Verification:** All rewards are broadcasted to the Solana network, and transaction signatures are recorded in the database.
 
@@ -30,7 +30,7 @@ MuskMarket operates on an "auto-payout" model, eliminating the need for user-tri
 ## 🔁 Automated Round Lifecycle
 
 1. **Round Creation:** The Admin creates a round, defining the prediction window and the vote lock time.
-2. **Voting Phase:** Users with eligible $MUX token balances cast their predictions.
+2. **Voting Phase:** Users with eligible $EMARKET token balances cast their predictions.
 3. **Vote Locking:** A specific time before the window opens (e.g., 60 mins), voting is automatically disabled to ensure fairness.
 4. **Monitoring Phase:** The system starts scanning for Elon's posts.
 5. **Resolution:**
