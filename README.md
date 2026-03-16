@@ -68,7 +68,7 @@ The MuskMarket vault is funded entirely by **Creator Rewards** generated from pu
 ---
 
 ## 📊 Data-Driven Design
-MuskMarket is built on extensive analysis of Elon Musk’s posting behavior. Over 75% of his activity consistently revolves around his core companies (Tesla, SpaceX, X, Grok). Our prediction windows and options are strategically aligned with peak activity periods to ensure high-engagement gameplay.
+Elonmarket is built on extensive analysis of Elon Musk’s posting behavior. Over 75% of his activity consistently revolves around his core companies (Tesla, SpaceX, X, Grok). Our prediction windows and options are strategically aligned with peak activity periods to ensure high-engagement gameplay.
 
 ---
 
