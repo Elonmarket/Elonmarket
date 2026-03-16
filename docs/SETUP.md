@@ -1,6 +1,6 @@
 # 🛠️ Project Setup & Installation
 
-Follow these steps to set up the MuskMarket project locally for development.
+Follow these steps to set up the Elonmarket project locally for development.
 
 ## 📋 Prerequisites
 - **Node.js:** v18.0.0 or higher
