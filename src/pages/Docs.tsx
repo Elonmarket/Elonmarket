@@ -163,11 +163,11 @@ const Docs = () => {
               <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 mb-4 px-3">OVERVIEW</Badge>
               <h1 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Project Mission</h1>
               <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-                🚀 <span className="text-foreground font-bold">MuskMarket</span> is a decentralized, free-to-play prediction marketplace where users predict what Elon Musk will post first next on X.
+                🚀 <span className="text-foreground font-bold">Elonmarket</span> is a decentralized, free-to-play prediction marketplace where users predict what Elon Musk will post first next on X.
               </p>
               <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-none">
                 <p>
-                  Our goal is to build the world's first frictionless prediction ecosystem focused on real-world behavioral patterns. MuskMarket eliminates the typical barriers of entry into prediction markets by automating the entire lifecycle—from account creation to reward distribution.
+                  Our goal is to build the world's first frictionless prediction ecosystem focused on real-world behavioral patterns. Elonmarket eliminates the typical barriers of entry into prediction markets by automating the entire lifecycle—from account creation to reward distribution.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-10 not-prose">
                   <div className="p-4 rounded-xl bg-card border border-border shadow-sm">
@@ -182,8 +182,8 @@ const Docs = () => {
                   </div>
                   <div className="p-4 rounded-xl bg-card border border-border shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-neon-green mb-2" />
-                    <p className="font-bold text-sm">$MUX Gated</p>
-                    <p className="text-xs text-muted-foreground">Exclusive to $MUX token holders.</p>
+                    <p className="font-bold text-sm">$EMARKET Gated</p>
+                    <p className="text-xs text-muted-foreground">Exclusive to $EMARKET token holders.</p>
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@ const Docs = () => {
               <h2 className="text-3xl font-display font-bold mb-8">Core Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { title: "Predict Elon’s X post", desc: "Stake your reputation on Musk's next move.", icon: Zap },
+                  { title: "Predict Elon’s X post", desc: "Stake your reputation on Elon's next move.", icon: Zap },
                   { title: "Win SOL automatically", desc: "No manual claims. Instant distribution.", icon: Trophy },
                   { title: "No wallet connection", desc: "Participation based on registration, not signatures.", icon: Lock },
                   { title: "Real-time streaming", desc: "Watch posts appear as they happen via WebSocket.", icon: Activity },
@@ -239,7 +239,7 @@ const Docs = () => {
               <div id="eligibility" className="mb-12 scroll-mt-28 p-6 rounded-2xl bg-neon-purple/5 border border-neon-purple/20">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-neon-purple">
                   <Lock className="w-5 h-5" />
-                  2. Token Eligibility ($MUX)
+                  2. Token Eligibility ($EMARKET)
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">To ensure high-quality participation and project sustainability, users must hold a minimum threshold of <strong>$MUX tokens</strong>.</p>
                 <div className="bg-black/40 rounded-xl p-4 border border-white/5 space-y-2">
@@ -247,7 +247,7 @@ const Docs = () => {
                     <span className="text-muted-foreground font-mono">threshold_check()</span>
                     <span className="text-neon-green font-bold">PASSED</span>
                   </div>
-                  <p className="text-xs font-mono text-white/80">Requirement: <span className="text-neon-cyan">100,000 $MUX</span></p>
+                  <p className="text-xs font-mono text-white/80">Requirement: <span className="text-neon-cyan">20,000 $EMARKET</span></p>
                 </div>
               </div>
 
@@ -256,7 +256,7 @@ const Docs = () => {
                   <div className="w-1.5 h-6 bg-neon-cyan rounded-full" />
                   3. Prediction Window
                 </h3>
-                <p className="text-muted-foreground mb-4">Each round is open for a fixed duration. Predictions must be submitted before the countdown ends. Typical windows are aligned with peak Musk activity hours.</p>
+                <p className="text-muted-foreground mb-4">Each round is open for a fixed duration. Predictions must be submitted before the countdown ends. Typical windows are aligned with peak Elon activity hours.</p>
               </div>
 
               <div id="options" className="mb-12 scroll-mt-28">
@@ -337,7 +337,7 @@ const Docs = () => {
               <div id="distribution" className="mb-12 scroll-mt-28">
                 <h3 className="text-xl font-bold mb-4">Automated SOL Distribution</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  MuskMarket uses an <strong>Automated Payout Engine</strong>. Once a winner is resolved, the system calculates the payout and broadcasts the transactions to the Solana network.
+                  Elonmarlet uses an <strong>Automated Payout Engine</strong>. Once a winner is resolved, the system calculates the payout and broadcasts the transactions to the Solana network.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-border bg-card">
@@ -395,7 +395,7 @@ const Docs = () => {
               <h2 className="text-3xl font-display font-bold mb-8">Research & Data</h2>
               <div className="space-y-8">
                 <p className="text-muted-foreground leading-relaxed">
-                  MuskMarket isn't based on guessing—it's based on behavioral science. We've analyzed thousands of Elon's posts to design our prediction windows and options.
+                  Elonmarket isn't based on guessing—it's based on behavioral science. We've analyzed thousands of Elon's posts to design our prediction windows and options.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                    <div className="space-y-4">
@@ -540,7 +540,7 @@ const Docs = () => {
             {/* Final Footer */}
             <footer className="pt-20 border-t border-border/50 text-center text-muted-foreground">
                <p className="text-sm mb-6 max-w-xl mx-auto">
-                 MuskMarket is an independent prediction platform and is not affiliated with X Corp or Elon Musk. Used for entertainment and community engagement only.
+                 Elonmarket is an independent prediction platform and is not affiliated with X Corp or Elon Musk. Used for entertainment and community engagement only.
                </p>
                <div className="flex justify-center gap-6 opacity-40">
                   <Github className="w-5 h-5" />
