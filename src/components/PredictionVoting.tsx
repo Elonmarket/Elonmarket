@@ -139,12 +139,10 @@ export const PredictionVoting = () => {
 
   const totalVotes = options.reduce((sum, opt) => sum + opt.vote_count, 0);
 
-  // Calculate current payout from live vault balance
+  // Calculate current payout from live vault balance (no accumulation)
   const vaultBalance = walletBalances?.vault_balance_sol || 0;
   const payoutPercentage = walletConfig?.payout_percentage || 20;
-  const accumulation = Number(currentRound?.accumulated_from_previous || 0);
-  const basePayout = (vaultBalance * payoutPercentage) / 100;
-  const currentPayout = basePayout + accumulation;
+  const currentPayout = (vaultBalance * payoutPercentage) / 100;
   const isRoundOpen = currentRound?.status === "open";
   const isRoundFinalized = currentRound?.status === "finalized" || currentRound?.status === "paid" || currentRound?.status === "no_winner";
   const canVote = isRoundOpen && !isVoteLocked;
@@ -373,24 +371,8 @@ export const PredictionVoting = () => {
                 <div className="h-px bg-border" />
 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <p className="text-xs text-muted-foreground">This Round ({payoutPercentage}%)</p>
-                    <p className="text-sm font-medium text-foreground">
-                      {basePayout.toFixed(4)} SOL
-                    </p>
-                  </div>
-                  
-                  {accumulation > 0 && (
-                    <div className="flex justify-between items-end">
-                      <p className="text-xs text-muted-foreground">Accumulated</p>
-                      <p className="text-sm font-medium text-neon-green">
-                        + {accumulation.toFixed(4)} SOL
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-border/50 flex justify-between items-end">
-                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Total Pool</p>
+                  <div className="pt-2 flex justify-between items-end">
+                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Round Pool ({payoutPercentage}%)</p>
                     <p className="font-display text-xl font-semibold text-neon-cyan tracking-tight">
                       {currentPayout.toFixed(4)} SOL
                     </p>

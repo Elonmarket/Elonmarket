@@ -264,32 +264,28 @@ async function processWinnerDetection(
 }
 
 async function handleNoWinner(supabase: any, round: any) {
-  // Get wallet config for payout percentage
-  const { data: walletConfig } = await supabase
-    .from("wallet_config")
-    .select("payout_percentage")
-    .single();
-
-  const payoutPercentage = walletConfig?.payout_percentage || 20;
-
-  // Get vault balance
-  const { data: balances } = await supabase.from("wallet_balances").select("*").single();
-  const vaultBalance = balances?.vault_balance_sol || 0;
-  
-  // Calculate potential payout (what would have been paid if there was a winner)
-  const totalPotentialPayout = vaultBalance * (payoutPercentage / 100);
-
+  // No winner = no payout, no accumulation. Simply close the round.
   await supabase
     .from("prediction_rounds")
     .update({
       status: "no_winner",
       finalized_at: new Date().toISOString(),
-      vault_balance_snapshot: vaultBalance,
-      payout_amount: totalPotentialPayout,
-      // We keep the current round's accumulated_from_previous so the NEXT round 
-      // can calculate total accumulated = (lastRound.accumulated + lastRound.payout_amount)
+      payout_amount: 0,
+      payout_per_winner: 0,
     })
     .eq("id", round.id);
+
+  // Update stats (round completed but no payout)
+  const { data: stats } = await supabase.from("payout_stats").select("*").single();
+  if (stats) {
+    await supabase
+      .from("payout_stats")
+      .update({
+        total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", stats.id);
+  }
 }
 
 async function finalizeRound(
@@ -353,13 +349,31 @@ async function finalizeRound(
 
   const payoutPercentage = walletConfig?.payout_percentage || 20;
 
-  // Get vault balance
-  const { data: balances } = await supabase.from("wallet_balances").select("*").single();
-  const vaultBalance = balances?.vault_balance_sol || 0;
+  // Get vault balance from vault server directly (real-time)
+  let vaultBalance = 0;
+  if (vaultUrl) {
+    try {
+      const vaultHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        "x-api-key": vaultPassword || "",
+      };
+      const balRes = await fetch(`${vaultUrl}/balance`, { headers: vaultHeaders });
+      if (balRes.ok) {
+        const balData = await balRes.json();
+        vaultBalance = balData.balance_sol || balData.balance || 0;
+      }
+    } catch (e) {
+      console.error("Failed to get vault balance:", e);
+    }
+  }
+  // Fallback to DB balance
+  if (vaultBalance === 0) {
+    const { data: balances } = await supabase.from("wallet_balances").select("*").single();
+    vaultBalance = balances?.vault_balance_sol || 0;
+  }
 
-  // Calculate payout: percentage of vault balance + accumulation from previous rounds
-  const currentRoundPayout = vaultBalance * (payoutPercentage / 100);
-  const totalPayout = currentRoundPayout + Number(round.accumulated_from_previous || 0);
+  // Simple payout: percentage of current vault balance, no accumulation
+  const totalPayout = vaultBalance * (payoutPercentage / 100);
   const perWinnerPayout = winnerCount > 0 ? totalPayout / winnerCount : 0;
 
   // Finalize round
@@ -373,78 +387,64 @@ async function finalizeRound(
       finalized_at: new Date().toISOString(),
       total_winners: winnerCount,
       vault_balance_snapshot: vaultBalance,
-      payout_amount: currentRoundPayout, // This is the base payout for stats, but totalPayout is what's paid
+      payout_amount: totalPayout,
       payout_per_winner: perWinnerPayout,
     })
     .eq("id", round.id);
 
-  // Update winner profile(s) and accumulate rewards
+  // Pay winners automatically from vault
   if (earliestWinningVote && winnerCount > 0) {
-    const winnersForVault: { user: string; amount: number }[] = [];
-
     for (const vote of earliestWinningVote) {
-      // Update win count
+      // Update win count (no unclaimed_rewards tracking needed - paid directly)
       await supabase
         .from("profiles")
         .update({
           total_wins: (vote.profiles?.total_wins || 0) + 1,
-          // Add per-winner payout to unclaimed rewards
-          unclaimed_rewards_sol: (vote.profiles?.unclaimed_rewards_sol || 0) + perWinnerPayout,
+          total_claimed_usd: (vote.profiles?.total_claimed_usd || 0) + perWinnerPayout,
         })
         .eq("id", vote.user_id);
 
-      winnersForVault.push({
-        user: vote.wallet_address,
-        amount: perWinnerPayout,
-      });
-
-      // Also add to recent_winners table immediately so they show up on leaderboard
+      // Add to recent_winners
       await supabase.from("recent_winners").insert({
         round_id: round.id,
         user_id: vote.user_id,
         wallet_address: vote.wallet_address,
         amount: perWinnerPayout,
       });
-    }
 
-    // Send winners to vault server via individual /payout calls
-    if (vaultUrl && winnersForVault.length > 0) {
-      console.log(`Processing ${winnersForVault.length} payouts...`);
-      
-      const headers: Record<string, string> = { 
-        "Content-Type": "application/json",
-        "x-api-key": vaultPassword || "65131200"
-      };
-
-      // Process payouts in parallel with a limit to avoid overwhelming the vault/network
-      const payoutPromises = winnersForVault.map(async (winner) => {
+      // Send payout from vault directly
+      if (vaultUrl) {
         try {
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            "x-api-key": vaultPassword || "",
+          };
           const res = await fetch(`${vaultUrl}/payout`, {
             method: "POST",
             headers,
             body: JSON.stringify({
-              wallet: winner.user,
-              amount: winner.amount,
+              wallet: vote.wallet_address,
+              amount: perWinnerPayout,
             }),
           });
-          
+
           if (!res.ok) {
             const errText = await res.text();
-            console.error(`Payout failed for ${winner.user}: ${res.status} ${errText}`);
-            return { success: false, user: winner.user, error: errText };
+            console.error(`Payout failed for ${vote.wallet_address}: ${res.status} ${errText}`);
+          } else {
+            const data = await res.json();
+            console.log(`Payout success for ${vote.wallet_address}: tx=${data.tx_signature || data.signature}`);
+            
+            // Mark round as paid
+            await supabase
+              .from("prediction_rounds")
+              .update({ status: "paid" })
+              .eq("id", round.id);
           }
-          
-          const data = await res.json();
-          return { success: true, user: winner.user, tx: data.tx_signature || data.signature };
         } catch (e) {
-          console.error(`Payout error for ${winner.user}:`, e);
-          return { success: false, user: winner.user, error: String(e) };
+          console.error(`Payout error for ${vote.wallet_address}:`, e);
         }
-      });
-
-      const results = await Promise.all(payoutPromises);
-      const successCount = results.filter(r => r.success).length;
-      console.log(`Payouts completed: ${successCount}/${winnersForVault.length}`);
+      }
     }
   }
 

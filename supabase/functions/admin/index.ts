@@ -116,19 +116,12 @@ Deno.serve(async (req) => {
       case "create_round": {
         const { data: lastRound } = await supabase
           .from("prediction_rounds")
-          .select("round_number, status, payout_amount, accumulated_from_previous")
+          .select("round_number")
           .order("round_number", { ascending: false })
           .limit(1)
           .maybeSingle();
 
         const newRoundNumber = (lastRound?.round_number || 0) + 1;
-
-        // Fetch accumulation from previous rounds if they ended in no_winner
-        let accumulated = 0;
-        if (lastRound && lastRound.status === "no_winner") {
-          accumulated = Number(lastRound.accumulated_from_previous || 0) + Number(lastRound.payout_amount || 0);
-          console.log(`Accumulating rewards from Round ${lastRound.round_number}: ${accumulated} SOL`);
-        }
 
         const { data: newRound, error } = await supabase
           .from("prediction_rounds")
@@ -140,7 +133,6 @@ Deno.serve(async (req) => {
             prediction_start_time: data.predictionStartTime || null,
             vote_lock_minutes: data.voteLockMinutes || 60,
             status: data.status || "upcoming",
-            accumulated_from_previous: accumulated,
           })
           .select()
           .single();
