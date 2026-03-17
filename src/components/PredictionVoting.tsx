@@ -371,24 +371,8 @@ export const PredictionVoting = () => {
                 <div className="h-px bg-border" />
 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <p className="text-xs text-muted-foreground">This Round ({payoutPercentage}%)</p>
-                    <p className="text-sm font-medium text-foreground">
-                      {basePayout.toFixed(4)} SOL
-                    </p>
-                  </div>
-                  
-                  {accumulation > 0 && (
-                    <div className="flex justify-between items-end">
-                      <p className="text-xs text-muted-foreground">Accumulated</p>
-                      <p className="text-sm font-medium text-neon-green">
-                        + {accumulation.toFixed(4)} SOL
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-border/50 flex justify-between items-end">
-                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Total Pool</p>
+                  <div className="pt-2 flex justify-between items-end">
+                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Round Pool ({payoutPercentage}%)</p>
                     <p className="font-display text-xl font-semibold text-neon-cyan tracking-tight">
                       {currentPayout.toFixed(4)} SOL
                     </p>
