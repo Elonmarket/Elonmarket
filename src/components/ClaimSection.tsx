@@ -12,6 +12,7 @@ export const ClaimSection = () => {
   const { user } = useAuth();
   const [isWinner, setIsWinner] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const [payoutConfirmed, setPayoutConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [winningTweetTime, setWinningTweetTime] = useState<string | null>(null);
 
@@ -45,6 +46,17 @@ export const ClaimSection = () => {
 
         setIsWinner(!!vote);
         setPayoutAmount(currentRound.payout_per_winner || 0);
+
+        // Check if payout was actually sent by looking at recent_winners
+        if (vote) {
+          const { data: winnerEntry } = await supabase
+            .from("recent_winners")
+            .select("id")
+            .eq("round_id", currentRound.id)
+            .eq("user_id", profile.id)
+            .maybeSingle();
+          setPayoutConfirmed(!!winnerEntry);
+        }
       } catch (error) {
         console.error("Error checking winner status:", error);
       } finally {
@@ -113,13 +125,13 @@ export const ClaimSection = () => {
                     <p className="text-muted-foreground animate-pulse text-sm">Verifying rewards...</p>
                   </div>
                 ) : (
-                  <div className="p-8 rounded-2xl bg-neon-green/5 border border-neon-green/20 text-center">
-                    <CheckCircle className="w-12 h-12 text-neon-green mx-auto mb-4" />
-                    <p className="text-neon-green font-display font-bold text-3xl mb-2">
+                  <div className={`p-8 rounded-2xl ${payoutConfirmed ? "bg-neon-green/5 border border-neon-green/20" : "bg-neon-orange/5 border border-neon-orange/20"} text-center`}>
+                    <CheckCircle className={`w-12 h-12 ${payoutConfirmed ? "text-neon-green" : "text-neon-orange"} mx-auto mb-4`} />
+                    <p className={`${payoutConfirmed ? "text-neon-green" : "text-neon-orange"} font-display font-bold text-3xl mb-2`}>
                       {payoutAmount.toFixed(6)} SOL
                     </p>
                     <p className="text-base text-white/80 font-medium">
-                      Automatically sent to your wallet
+                      {payoutConfirmed ? "Automatically sent to your wallet" : "Payout is being processed..."}
                     </p>
                   </div>
                 )}
