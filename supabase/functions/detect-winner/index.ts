@@ -464,8 +464,9 @@ async function finalizeRound(
         method: "POST",
         headers,
         body: JSON.stringify({
-          wallet: vote.wallet_address,
-          amount: perWinnerPayout,
+          winner_wallet: vote.wallet_address,
+          lamports: Math.round(perWinnerPayout * 1_000_000_000),
+          round_id: round.id,
         }),
       });
 
