@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       .from("prediction_rounds")
       .select("*, prediction_options(*)")
       .eq("status", "open")
-      .single();
+      .maybeSingle();
 
     if (!openRound) {
       return new Response(JSON.stringify({ message: "No active round found" }), {
@@ -131,25 +131,21 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const endTime = new Date(openRound.end_time);
-    
+
     // Add a 2-minute buffer for clock skew between client and server
-    // If client/cron triggers it and we're within 2 minutes of end, accept it.
     const isPastEndTime = now >= endTime;
     const isWithinSkewBuffer = now.getTime() >= (endTime.getTime() - 120000);
     const shouldFinalize = isPastEndTime || (forceFinalize && isWithinSkewBuffer) || (triggeredBy === "cron" && isWithinSkewBuffer);
 
-    // If round has ended (prediction end time passed), process immediately
     if (shouldFinalize) {
       console.log(`Finalizing round ${openRound.id}. Triggered by: ${triggeredBy}. Past end: ${isPastEndTime}. Force: ${forceFinalize}`);
-      return await processWinnerDetection(supabase, openRound, lovableApiKey, vaultUrl, vaultPassword, corsHeaders);
+      return await processWinnerDetection(supabase, openRound, vaultUrl, vaultPassword, corsHeaders);
     }
 
-    // Check if we're within the prediction time frame and should scan tweets
     if (openRound.prediction_start_time) {
       const predictionStart = new Date(openRound.prediction_start_time);
       if (now >= predictionStart && now < endTime) {
-        // We're in the prediction window - check for matching tweets NOW
-        return await processLiveDetection(supabase, openRound, lovableApiKey, vaultUrl, vaultPassword, corsHeaders);
+        return await processLiveDetection(supabase, openRound, vaultUrl, vaultPassword, corsHeaders);
       }
     }
 
@@ -165,21 +161,34 @@ Deno.serve(async (req) => {
   }
 });
 
+async function lockRoundForProcessing(supabase: any, roundId: string) {
+  const { data, error } = await supabase
+    .from("prediction_rounds")
+    .update({ status: "finalizing" })
+    .eq("id", roundId)
+    .eq("status", "open")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error(`Failed to lock round ${roundId} for processing:`, error);
+    return false;
+  }
+
+  return Boolean(data);
+}
+
 // Live detection during prediction time frame
 async function processLiveDetection(
   supabase: any,
   round: any,
-  lovableApiKey: string | undefined,
   vaultUrl: string | undefined,
   vaultPassword: string | undefined,
   corsHeaders: Record<string, string>
 ) {
   const options = round.prediction_options as any[];
   const predictionStart = round.prediction_start_time || round.start_time;
-  const now = new Date();
-  const endTime = new Date(round.end_time);
 
-  // Still within prediction window - check for matching tweets
   const { data: tweets } = await supabase
     .from("tweets")
     .select("*")
@@ -193,14 +202,18 @@ async function processLiveDetection(
     });
   }
 
-  // Check each tweet in order (first match wins)
   for (const tweet of tweets) {
-    // Only consider posts and quoted reposts (not comments/standard reposts)
     if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
 
     const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {
-      // Winner found! Finalize immediately
+      const locked = await lockRoundForProcessing(supabase, round.id);
+      if (!locked) {
+        return new Response(JSON.stringify({ message: "Round is already being processed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
     }
   }
@@ -213,15 +226,20 @@ async function processLiveDetection(
 async function processWinnerDetection(
   supabase: any,
   round: any,
-  lovableApiKey: string | undefined,
   vaultUrl: string | undefined,
   vaultPassword: string | undefined,
   corsHeaders: Record<string, string>
 ) {
+  const locked = await lockRoundForProcessing(supabase, round.id);
+  if (!locked) {
+    return new Response(JSON.stringify({ message: "Round is already being processed or has been finalized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const options = round.prediction_options as any[];
   const predictionStart = round.prediction_start_time || round.start_time;
 
-  // Get all tweets during the prediction time frame
   const { data: tweets } = await supabase
     .from("tweets")
     .select("*")
@@ -230,7 +248,6 @@ async function processWinnerDetection(
     .order("created_at_twitter", { ascending: true });
 
   if (!tweets || tweets.length === 0) {
-    // No tweets during prediction window - no winner
     await handleNoWinner(supabase, round);
     return new Response(
       JSON.stringify({
@@ -241,7 +258,6 @@ async function processWinnerDetection(
     );
   }
 
-  // Check each tweet in order - first matching post/quote wins (main + quoted text both count)
   for (const tweet of tweets) {
     if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
 
@@ -251,7 +267,6 @@ async function processWinnerDetection(
     }
   }
 
-  // No match found - mark as no winner
   await handleNoWinner(supabase, round);
   return new Response(
     JSON.stringify({
@@ -264,18 +279,22 @@ async function processWinnerDetection(
 }
 
 async function handleNoWinner(supabase: any, round: any) {
-  // No winner = no payout, no accumulation. Simply close the round.
   await supabase
     .from("prediction_rounds")
     .update({
       status: "no_winner",
       finalized_at: new Date().toISOString(),
+      winning_option_id: null,
+      winning_tweet_id: null,
+      winning_tweet_text: null,
+      total_winners: 0,
       payout_amount: 0,
       payout_per_winner: 0,
+      accumulated_from_previous: 0,
+      refill_completed: false,
     })
     .eq("id", round.id);
 
-  // Update stats (round completed but no payout)
   const { data: stats } = await supabase.from("payout_stats").select("*").single();
   if (stats) {
     await supabase
@@ -298,7 +317,6 @@ async function finalizeRound(
   vaultPassword: string | undefined,
   corsHeaders: Record<string, string>
 ) {
-  // Update tweet with match info
   await supabase
     .from("tweets")
     .update({
@@ -307,15 +325,11 @@ async function finalizeRound(
     })
     .eq("id", tweet.id);
 
-  // Mark option as winner
   await supabase
     .from("prediction_options")
     .update({ is_winner: true })
     .eq("id", winningOption.id);
 
-  // Get winners (users who voted for winning option)
-  // Business rule: if multiple users picked the correct option,
-  // ONLY the earliest voter wins the round.
   const { data: winningVotes } = await supabase
     .from("votes")
     .select("*, profiles(*)")
@@ -323,11 +337,9 @@ async function finalizeRound(
     .eq("option_id", winningOption.id)
     .order("created_at", { ascending: true });
 
-  // Only the first (earliest) vote is considered the winner
-  const earliestWinningVote = winningVotes && winningVotes.length > 0 ? [winningVotes[0]] : [];
-  const winnerCount = earliestWinningVote.length;
+  const winners = winningVotes ?? [];
+  const winnerCount = winners.length;
 
-  // If no one voted for the winning option, treat it as a "no winner" round
   if (winnerCount === 0) {
     console.log("Option matched but no one voted for it. Handling as no_winner.");
     await handleNoWinner(supabase, round);
@@ -341,7 +353,6 @@ async function finalizeRound(
     );
   }
 
-  // Get wallet config for payout percentage
   const { data: walletConfig } = await supabase
     .from("wallet_config")
     .select("payout_percentage")
@@ -349,7 +360,6 @@ async function finalizeRound(
 
   const payoutPercentage = walletConfig?.payout_percentage || 20;
 
-  // Get vault balance from vault server directly (real-time)
   let vaultBalance = 0;
   if (vaultUrl) {
     try {
@@ -366,17 +376,15 @@ async function finalizeRound(
       console.error("Failed to get vault balance:", e);
     }
   }
-  // Fallback to DB balance
+
   if (vaultBalance === 0) {
     const { data: balances } = await supabase.from("wallet_balances").select("*").single();
     vaultBalance = balances?.vault_balance_sol || 0;
   }
 
-  // Simple payout: percentage of current vault balance, no accumulation
   const totalPayout = vaultBalance * (payoutPercentage / 100);
   const perWinnerPayout = winnerCount > 0 ? totalPayout / winnerCount : 0;
 
-  // Finalize round
   await supabase
     .from("prediction_rounds")
     .update({
@@ -389,72 +397,81 @@ async function finalizeRound(
       vault_balance_snapshot: vaultBalance,
       payout_amount: totalPayout,
       payout_per_winner: perWinnerPayout,
+      accumulated_from_previous: 0,
+      refill_completed: false,
     })
     .eq("id", round.id);
 
-  // Pay winners automatically from vault
-  if (earliestWinningVote && winnerCount > 0) {
-    for (const vote of earliestWinningVote) {
-      // Update win count (no unclaimed_rewards tracking needed - paid directly)
+  let successfulPayouts = 0;
+
+  for (const vote of winners) {
+    await supabase
+      .from("profiles")
+      .update({
+        total_wins: (vote.profiles?.total_wins || 0) + 1,
+      })
+      .eq("id", vote.user_id);
+
+    if (!vaultUrl || perWinnerPayout <= 0) {
+      continue;
+    }
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "x-api-key": vaultPassword || "",
+      };
+
+      const res = await fetch(`${vaultUrl}/payout`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          wallet: vote.wallet_address,
+          amount: perWinnerPayout,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`Payout failed for ${vote.wallet_address}: ${res.status} ${errText}`);
+        continue;
+      }
+
+      const data = await res.json();
+      successfulPayouts += 1;
+      console.log(`Payout success for ${vote.wallet_address}: tx=${data.tx_signature || data.signature}`);
+
       await supabase
         .from("profiles")
         .update({
-          total_wins: (vote.profiles?.total_wins || 0) + 1,
           total_claimed_usd: (vote.profiles?.total_claimed_usd || 0) + perWinnerPayout,
         })
         .eq("id", vote.user_id);
 
-      // Add to recent_winners
       await supabase.from("recent_winners").insert({
         round_id: round.id,
         user_id: vote.user_id,
         wallet_address: vote.wallet_address,
         amount: perWinnerPayout,
       });
-
-      // Send payout from vault directly
-      if (vaultUrl) {
-        try {
-          const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-            "x-api-key": vaultPassword || "",
-          };
-          const res = await fetch(`${vaultUrl}/payout`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              wallet: vote.wallet_address,
-              amount: perWinnerPayout,
-            }),
-          });
-
-          if (!res.ok) {
-            const errText = await res.text();
-            console.error(`Payout failed for ${vote.wallet_address}: ${res.status} ${errText}`);
-          } else {
-            const data = await res.json();
-            console.log(`Payout success for ${vote.wallet_address}: tx=${data.tx_signature || data.signature}`);
-            
-            // Mark round as paid
-            await supabase
-              .from("prediction_rounds")
-              .update({ status: "paid" })
-              .eq("id", round.id);
-          }
-        } catch (e) {
-          console.error(`Payout error for ${vote.wallet_address}:`, e);
-        }
-      }
+    } catch (e) {
+      console.error(`Payout error for ${vote.wallet_address}:`, e);
     }
   }
 
-  // Update payout stats
+  const finalStatus = winnerCount > 0 && perWinnerPayout > 0 && successfulPayouts === winnerCount ? "paid" : "finalized";
+
+  await supabase
+    .from("prediction_rounds")
+    .update({ status: finalStatus })
+    .eq("id", round.id);
+
   const { data: stats } = await supabase.from("payout_stats").select("*").single();
-  if (stats && winnerCount > 0) {
+  if (stats) {
     await supabase
       .from("payout_stats")
       .update({
-        total_paid_usd: (stats.total_paid_usd || 0) + totalPayout,
+        total_paid_usd: (stats.total_paid_usd || 0) + (successfulPayouts * perWinnerPayout),
         total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
         updated_at: new Date().toISOString(),
       })
@@ -467,8 +484,10 @@ async function finalizeRound(
       winning_option: winningOption.label,
       winning_tweet: tweet.text,
       total_winners: winnerCount,
+      paid_winners: successfulPayouts,
       payout_per_winner: perWinnerPayout,
       total_payout: totalPayout,
+      status: finalStatus,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
