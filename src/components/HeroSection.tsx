@@ -87,7 +87,7 @@ export const HeroSection = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-slide-up" style={{ animationDelay: "0.4s" }}>
             <Button asChild size="lg" className="group min-w-[200px] bg-white text-black hover:bg-white/90 transition-all hover:scale-105 active:scale-95">
               <a href="#predict">
-                <img src="/elonmarket-icon.png" alt="" className="w-8 h-8 object-contain rounded group-hover:rotate-12 transition-transform invert" />
+                <img src="/elonmarket-icon-black.png" alt="" className="w-8 h-8 object-contain group-hover:rotate-12 transition-transform" />
                 Start Predicting
               </a>
             </Button>
