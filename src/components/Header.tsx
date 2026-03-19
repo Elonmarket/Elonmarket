@@ -35,8 +35,8 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center group">
-            <div className="h-12 md:h-16 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
-              <img src="/elonmarket-logo.jpeg" alt="Elonmarket" className="h-full w-auto object-contain mix-blend-lighten" />
+            <div className="h-8 md:h-10 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02] bg-black rounded">
+              <img src="/elonmarket-logo.jpeg" alt="Elonmarket" className="h-full w-auto object-contain" />
             </div>
           </Link>
 
