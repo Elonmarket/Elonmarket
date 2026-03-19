@@ -9,7 +9,7 @@ export const Footer = () => {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-12 md:h-16 overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-[1.02]">
-              <img src="/musk-logo.png" alt="Elonmarket" className="h-full w-auto object-contain" />
+              <img src="/elonmarket-logo.jpeg" alt="Elonmarket" className="h-full w-auto object-contain" />
             </div>
             </div>
             <p className="text-muted-foreground text-sm max-w-xs">

@@ -74,7 +74,7 @@ const Docs = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2 group">
-               <span className="font-display font-bold text-lg tracking-tight">MuskMarket <span className="text-muted-foreground font-normal">Docs</span></span>
+               <span className="font-display font-bold text-lg tracking-tight">Elonmarket <span className="text-muted-foreground font-normal">Docs</span></span>
             </Link>
             <Separator orientation="vertical" className="h-6 hidden md:block" />
             <Badge variant="outline" className="hidden md:flex bg-muted/30 border-border/50 text-[10px] uppercase font-bold tracking-widest px-2 py-0.5">
