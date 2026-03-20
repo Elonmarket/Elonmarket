@@ -143,7 +143,7 @@ async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address
     });
     if (balRes.ok) {
       const balData = await balRes.json();
-      balance = balData.balance || 0;
+      balance = balData.sol || balData.balance || (balData.lamports ? balData.lamports / 1_000_000_000 : 0);
     } else {
       console.warn(`Vault API balance error: ${balRes.status}`);
     }

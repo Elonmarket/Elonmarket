@@ -380,7 +380,7 @@ async function finalizeRound(
       const balRes = await fetch(`${effectiveVaultUrl}/balance`, { headers: vaultHeaders });
       if (balRes.ok) {
         const balData = await balRes.json();
-        vaultBalance = balData.balance_sol || balData.balance || 0;
+        vaultBalance = balData.sol || balData.balance_sol || balData.balance || (balData.lamports ? balData.lamports / 1_000_000_000 : 0);
       }
     } catch (e) {
       console.error("Failed to get vault balance:", e);
@@ -477,6 +477,26 @@ async function finalizeRound(
     .from("prediction_rounds")
     .update({ status: finalStatus })
     .eq("id", round.id);
+
+  // Update wallet_balances so the UI reflects the new vault balance after payout
+  if (successfulPayouts > 0 && effectiveVaultUrl) {
+    try {
+      const postPayoutRes = await fetch(`${effectiveVaultUrl}/balance`, {
+        headers: { "x-api-key": effectiveVaultKey || "" },
+      });
+      if (postPayoutRes.ok) {
+        const postPayoutData = await postPayoutRes.json();
+        const newBalance = postPayoutData.sol || (postPayoutData.lamports ? postPayoutData.lamports / 1_000_000_000 : 0);
+        await supabase.from("wallet_balances").update({
+          vault_balance_sol: newBalance,
+          last_updated_at: new Date().toISOString(),
+        }).eq("id", (await supabase.from("wallet_balances").select("id").single()).data?.id);
+        console.log(`Updated wallet_balances: vault_balance_sol=${newBalance}`);
+      }
+    } catch (e) {
+      console.error("Failed to update wallet_balances after payout:", e);
+    }
+  }
 
   const { data: stats } = await supabase.from("payout_stats").select("*").single();
   if (stats) {
