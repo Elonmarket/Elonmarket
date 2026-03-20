@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const CACHE_KEY = "muskmarket_tweets_cache";
+const CACHE_KEY = "elonmarket_tweets_cache";
 const MAX_TWEETS = 12;
 const RETRY_DELAYS = [2000, 4000, 8000]; // Exponential backoff
 

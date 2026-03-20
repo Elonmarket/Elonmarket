@@ -14,7 +14,7 @@ Follow these steps to set up the Elonmarket project locally for development.
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/muskmarket.git
+   git clone https://github.com/your-username/elonmarket.git
    cd elonmarket
    ```
 
