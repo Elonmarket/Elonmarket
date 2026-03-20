@@ -5,7 +5,9 @@ Elonmarket is a decentralized, free-to-play prediction marketplace where users p
 
 **Simple. Transparent. Automated.**
 
-![MuskMarket Banner](/public/musk-logo1.jpg)
+![Elonmarket Banner](public/images/elonmarket-banner1.jpeg)
+
+![Elonmarket Mobile](public/images/elonmarket-banner2.jpeg)
 
 ## 🌟 Core Features
 
