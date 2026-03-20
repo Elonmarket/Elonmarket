@@ -39,7 +39,7 @@ export const Header = () => {
             <img
               src={headerLogo}
               alt="Elonmarket"
-              className="block h-8 md:h-9 w-auto object-contain opacity-95 brightness-110 contrast-125 transition-transform duration-200 group-hover:scale-[1.02]"
+              className="block h-10 md:h-12 w-auto object-contain opacity-95 brightness-110 contrast-125 transition-transform duration-200 group-hover:scale-[1.02]"
               style={{ mixBlendMode: "screen" }}
             />
           </Link>
