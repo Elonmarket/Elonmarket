@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, Zap, Trophy, Wallet, Shield, Clock, Monitor, Terminal, Database, Cpu, Layout, Info, Rocket, CheckCircle2, ListChecks, TrendingUp, BarChart3, Binary, Lock, Users, ChevronRight, Menu, X, Search, Github, Twitter, ExternalLink, Activity } from "lucide-react";
+import { ArrowLeft, ArrowRight, Zap, Trophy, Wallet, Shield, Clock, Monitor, Terminal, Database, Cpu, Layout, Info, Rocket, CheckCircle2, ListChecks, TrendingUp, BarChart3, Binary, Lock, Users, ChevronRight, Menu, X, Search, Github, ExternalLink, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
