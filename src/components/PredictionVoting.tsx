@@ -76,7 +76,7 @@ export const PredictionVoting = () => {
       // Vote locking logic
       if (currentRound.status === "open" && currentRound.prediction_start_time) {
         const predictionStart = parseToUTC(currentRound.prediction_start_time);
-        const voteLockMinutes = currentRound.vote_lock_minutes || 60;
+        const voteLockMinutes = currentRound.vote_lock_minutes ?? 60;
         const voteLockTime = new Date(predictionStart.getTime() - voteLockMinutes * 60 * 1000);
         
         if (now >= voteLockTime) {

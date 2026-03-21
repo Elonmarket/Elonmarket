@@ -30,7 +30,7 @@ export const HeroSection = () => {
 
       const now = new Date();
       const predictionStart = currentRound.prediction_start_time ? new Date(currentRound.prediction_start_time) : null;
-      const voteLockMinutes = currentRound.vote_lock_minutes || 60;
+      const voteLockMinutes = currentRound.vote_lock_minutes ?? 60;
       const voteLockTime = predictionStart ? new Date(predictionStart.getTime() - voteLockMinutes * 60 * 1000) : null;
 
       if (voteLockTime && now >= voteLockTime) {

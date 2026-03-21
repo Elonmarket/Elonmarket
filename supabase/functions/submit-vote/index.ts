@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     if (round.prediction_start_time) {
       const now = new Date();
       const predictionStart = new Date(round.prediction_start_time);
-      const voteLockMinutes = round.vote_lock_minutes || 60;
+      const voteLockMinutes = round.vote_lock_minutes ?? 60;
       const voteLockTime = new Date(predictionStart.getTime() - voteLockMinutes * 60 * 1000);
 
       if (now >= voteLockTime) {
