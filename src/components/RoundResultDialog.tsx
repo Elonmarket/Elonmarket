@@ -39,8 +39,8 @@ export const RoundResultDialog = () => {
       const lastSeenId = localStorage.getItem(STORAGE_KEY);
       if (lastSeenId === latestRound.id) return;
 
-      const isNoWinner = latestRound.status === "no_winner";
-      const hasWinner = !isNoWinner && !!latestRound.winning_option_id;
+      const hasWinner = !!latestRound.winning_option_id;
+      const isNoWinner = !hasWinner;
       let isPersonalWinner = false;
       let winningOptionLabel: string | null = null;
 
