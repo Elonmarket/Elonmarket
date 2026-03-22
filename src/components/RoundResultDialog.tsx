@@ -178,7 +178,7 @@ export const RoundResultDialog = () => {
               <p className="text-neon-green text-sm font-bold mt-2">You predicted correctly!</p>
             )}
             {userVotedAndLost && (
-              <p className="text-neon-orange text-sm font-bold mt-2">Better luck next time!</p>
+              <p className="text-neon-orange text-sm font-bold mt-2">You didn't win this round. Good luck next time!</p>
             )}
           </div>
 
