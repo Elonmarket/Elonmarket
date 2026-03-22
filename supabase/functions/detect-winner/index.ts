@@ -348,13 +348,44 @@ async function finalizeRound(
   const winnerCount = winners.length;
 
   if (winnerCount === 0) {
-    console.log("Option matched but no one voted for it. Handling as no_winner.");
-    await handleNoWinner(supabase, round);
+    // Preserve winning_option_id and tweet info so the frontend knows
+    // a winning category WAS detected, even though nobody voted for it.
+    console.log(`Option '${winningOption.label}' matched but no one voted for it. Preserving winning category info.`);
+
+    await supabase
+      .from("prediction_rounds")
+      .update({
+        status: "no_winner",
+        winning_option_id: winningOption.id,
+        winning_tweet_id: tweet.tweet_id,
+        winning_tweet_text: tweet.text,
+        finalized_at: new Date().toISOString(),
+        total_winners: 0,
+        payout_amount: 0,
+        payout_per_winner: 0,
+        accumulated_from_previous: 0,
+        refill_completed: false,
+      })
+      .eq("id", round.id);
+
+    const { data: stats } = await supabase.from("payout_stats").select("*").single();
+    if (stats) {
+      await supabase
+        .from("payout_stats")
+        .update({
+          total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stats.id);
+    }
+
     return new Response(
       JSON.stringify({
         winner_detected: true,
         winning_option: winningOption.label,
-        message: "Option matched but no voters found. Round ended with no winners.",
+        winning_tweet: tweet.text,
+        total_winners: 0,
+        message: `Winning category: ${winningOption.label}. No one voted for this option, so no payouts were made.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
