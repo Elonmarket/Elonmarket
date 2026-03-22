@@ -115,17 +115,18 @@ export const RoundResultDialog = () => {
 
   if (!result) return null;
 
-  const isNoWinner = result.status === "no_winner";
+  // Use hasWinner (presence of winning_option_id) as the source of truth, not just status
+  const isNoWinner = !result.hasWinner;
   const userVotedAndLost = result.userVoted && !result.isPersonalWinner && result.hasWinner;
   const iconToneClass = isNoWinner ? "text-neon-orange" : userVotedAndLost ? "text-neon-orange" : "text-neon-cyan";
   const glowColor = isNoWinner ? "rgba(249,115,22,0.32)" : userVotedAndLost ? "rgba(249,115,22,0.28)" : "rgba(34,211,238,0.28)";
   const summaryText = isNoWinner
-    ? "No matching post was detected before the round closed, so no payout was sent for this round."
+    ? "No winners this round. No matching post was detected before the round closed."
     : result.isPersonalWinner
       ? "You picked the winning category. Rewards are being sent automatically from the vault."
       : userVotedAndLost
-        ? `The winning category was ${result.winningOptionLabel || "Unknown"}. Better luck next time!`
-        : `The winning category was ${result.winningOptionLabel || "Unknown"}. Automatic rewards were sent to the correct winner wallets.`;
+        ? `Winning category: ${result.winningOptionLabel || "Unknown"}. You didn't win this round. Try again and good luck next time!`
+        : `Winning category: ${result.winningOptionLabel || "Unknown"}. Automatic rewards were sent to the correct winner wallets.`;
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
@@ -177,7 +178,7 @@ export const RoundResultDialog = () => {
               <p className="text-neon-green text-sm font-bold mt-2">You predicted correctly!</p>
             )}
             {userVotedAndLost && (
-              <p className="text-neon-orange text-sm font-bold mt-2">Better luck next time!</p>
+              <p className="text-neon-orange text-sm font-bold mt-2">You didn't win this round. Good luck next time!</p>
             )}
           </div>
 
