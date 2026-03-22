@@ -35,7 +35,8 @@ To participate, users must hold a minimum threshold of $EMARKET tokens (e.g., 20
 Each round has a specific time window (e.g., 1:00 PM – 3:00 PM UTC). Users must cast their votes before the window opens or before the **Vote Lock** period begins.
 
 ### 4️⃣ Prediction Options
-Each round features curated options based on the Musk ecosystem:
+Each round features curated options based on the Elon
+ ecosystem:
 - **Grok / AI**
 - **Tesla**
 - **Starlink**
