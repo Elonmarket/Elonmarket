@@ -35,10 +35,11 @@ export function useLeaderboard() {
     try {
       const myWallet = publicKey?.toBase58() || "";
 
-      // Fetch profiles ordered by total_claimed_usd, wins, and predictions (consistent ranking)
+      // Fetch profiles that have at least 1 win, ordered by earnings
       const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
+        .gt("total_wins", 0)
         .order("total_claimed_usd", { ascending: false })
         .order("total_wins", { ascending: false })
         .order("total_predictions", { ascending: false })
