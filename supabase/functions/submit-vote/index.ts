@@ -221,6 +221,35 @@ Deno.serve(async (req) => {
       throw new Error(`Vote insertion failed: ${voteError.message}`);
     }
 
+    // Increment total_predictions on the user's profile
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("total_predictions")
+      .eq("id", profile.id)
+      .single();
+    await supabase
+      .from("profiles")
+      .update({ total_predictions: (currentProfile?.total_predictions || 0) + 1 })
+      .eq("id", profile.id);
+
+    // Increment total_predictions_made in payout_stats
+    const { data: stats } = await supabase.from("payout_stats").select("*").single();
+    if (stats) {
+      await supabase
+        .from("payout_stats")
+        .update({
+          total_predictions_made: (stats.total_predictions_made || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stats.id);
+    } else {
+      await supabase.from("payout_stats").insert({
+        total_predictions_made: 1,
+        total_paid_usd: 0,
+        total_rounds_completed: 0,
+      });
+    }
+
     return new Response(JSON.stringify({ success: true, vote }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

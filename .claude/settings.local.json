@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__supabase_fiverr_client__execute_sql",
+      "mcp__supabase_fiverr_client__list_tables"
+    ]
+  }
+}

@@ -302,15 +302,27 @@ async function handleNoWinner(supabase: any, round: any) {
     })
     .eq("id", round.id);
 
+  await incrementPayoutStats(supabase, { rounds: 1 });
+}
+
+async function incrementPayoutStats(
+  supabase: any,
+  increments: { rounds?: number; paid?: number; predictions?: number }
+) {
   const { data: stats } = await supabase.from("payout_stats").select("*").single();
+  const update: Record<string, any> = { updated_at: new Date().toISOString() };
+  if (increments.rounds) update.total_rounds_completed = (stats?.total_rounds_completed || 0) + increments.rounds;
+  if (increments.paid) update.total_paid_usd = (stats?.total_paid_usd || 0) + increments.paid;
+  if (increments.predictions) update.total_predictions_made = (stats?.total_predictions_made || 0) + increments.predictions;
+
   if (stats) {
-    await supabase
-      .from("payout_stats")
-      .update({
-        total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", stats.id);
+    await supabase.from("payout_stats").update(update).eq("id", stats.id);
+  } else {
+    await supabase.from("payout_stats").insert({
+      total_rounds_completed: update.total_rounds_completed || 0,
+      total_paid_usd: update.total_paid_usd || 0,
+      total_predictions_made: update.total_predictions_made || 0,
+    });
   }
 }
 
@@ -368,16 +380,7 @@ async function finalizeRound(
       })
       .eq("id", round.id);
 
-    const { data: stats } = await supabase.from("payout_stats").select("*").single();
-    if (stats) {
-      await supabase
-        .from("payout_stats")
-        .update({
-          total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", stats.id);
-    }
+    await incrementPayoutStats(supabase, { rounds: 1 });
 
     return new Response(
       JSON.stringify({
@@ -529,17 +532,10 @@ async function finalizeRound(
     }
   }
 
-  const { data: stats } = await supabase.from("payout_stats").select("*").single();
-  if (stats) {
-    await supabase
-      .from("payout_stats")
-      .update({
-        total_paid_usd: (stats.total_paid_usd || 0) + (successfulPayouts * perWinnerPayout),
-        total_rounds_completed: (stats.total_rounds_completed || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", stats.id);
-  }
+  await incrementPayoutStats(supabase, {
+    rounds: 1,
+    paid: successfulPayouts * perWinnerPayout,
+  });
 
   return new Response(
     JSON.stringify({
