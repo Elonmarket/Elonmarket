@@ -44,10 +44,11 @@ export function usePlatformData() {
 
   const fetchData = useCallback(async () => {
     try {
-      // Fetch player count
+      // Fetch player count (only count users who have made at least 1 prediction)
       const { count } = await supabase
         .from("profiles")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .gt("total_predictions", 0);
       
       if (count !== null) {
         setPlayerCount(count);
