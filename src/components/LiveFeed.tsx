@@ -204,17 +204,11 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
         )}
 
         <div className="relative flex gap-3 h-full">
-          {tweet.author_avatar ? (
-            <img
-              src={tweet.author_avatar}
-              alt={tweet.author_username}
-              className="w-10 h-10 rounded-full object-cover shrink-0 border border-border"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
-              <User className="w-5 h-5 text-muted-foreground" />
-            </div>
-          )}
+          <img
+            src={elonAvatar}
+            alt={tweet.author_username}
+            className="w-10 h-10 rounded-full object-cover shrink-0 border border-border"
+          />
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-foreground truncate">{tweet.author_name || "Elon Musk"}</span>
