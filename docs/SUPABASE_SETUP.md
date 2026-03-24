@@ -100,7 +100,7 @@ npx supabase secrets set IFTTT_WEBHOOK_SECRET=your_secret_if_you_use_it
 ## 5. Admin panel access
 
 - URL: `https://your-app.com/admin` (or `http://localhost:5173/admin` in dev).
-- Log in with the **same value** you set for `ADMIN_SECRET_KEY` (e.g. `12345`).
+- Log in with the **same value** you set for `ADMIN_SECRET_KEY`.
 
 ---
 
