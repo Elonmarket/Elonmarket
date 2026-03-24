@@ -210,7 +210,9 @@ export const RoundManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "x-admin-secret": adminSecretKey,
         },
+        body: JSON.stringify({ triggered_by: "admin", force_finalize: true }),
       });
       toast({ title: "Round ended!", description: "Winner detection triggered." });
       fetchRounds();
