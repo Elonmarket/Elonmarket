@@ -104,14 +104,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- Authentication: require secret or valid internal caller ---
+    // --- Authentication: require secret or verified internal caller ---
     const body = await req.json().catch(() => ({}));
     const triggeredBy = body.triggered_by || "manual";
     const forceFinalize = body.force_finalize === true;
 
     const expectedSecret = Deno.env.get("ADMIN_SECRET_KEY");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const providedSecret = body.admin_secret || req.headers.get("x-admin-secret");
-    const isInternalCaller = triggeredBy === "ifttt_webhook" || triggeredBy === "cron";
+    
+    // Internal callers (ifttt_webhook, cron) must prove identity via service_role Bearer token
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearerToken = authHeader.replace("Bearer ", "");
+    const isInternalCaller = 
+      (triggeredBy === "ifttt_webhook" || triggeredBy === "cron") && 
+      bearerToken === supabaseServiceKey;
 
     if (!isInternalCaller && providedSecret !== expectedSecret) {
       console.warn(`Unauthorized detect-winner call from: ${triggeredBy}`);
@@ -122,7 +129,6 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Use env vars only for vault credentials (never from DB)

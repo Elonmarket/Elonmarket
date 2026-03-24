@@ -58,10 +58,11 @@ Follow these steps to set up the Elonmarket project locally for development.
 4. **Required Secrets:**
    Configure the secrets for the Edge Functions.
    ```bash
-   supabase secrets set VAULT_URL="http://yourvps:8000"
-   supabase secrets set VAULT_PASSWORD="your-api-key"
-   supabase secrets set SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
-   supabase secrets set IFTTT_WEBHOOK_SECRET="your-secret"
+   supabase secrets set VAULT_URL="<your-vault-url>"
+   supabase secrets set VAULT_PASSWORD="<your-vault-api-key>"
+   supabase secrets set VAULT_ADMIN_PASSWORD="<your-vault-admin-key>"
+   supabase secrets set SOLANA_RPC_URL="<your-rpc-url>"
+   supabase secrets set IFTTT_WEBHOOK_SECRET="<strong-random-string>"
    ```
 
 ---
