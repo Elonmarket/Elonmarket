@@ -71,6 +71,12 @@ Deno.serve(async (req) => {
     }
 
     switch (action) {
+      case "get_wallet_config": {
+        const { data: wc } = await supabase.from("wallet_config").select("*").maybeSingle();
+        return new Response(JSON.stringify(wc || {}), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       case "update_wallet_config": {
         const updateData: Record<string, any> = {
           updated_at: new Date().toISOString(),

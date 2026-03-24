@@ -53,14 +53,22 @@ export function usePlatformData() {
         setPlayerCount(count);
       }
 
-      // Fetch wallet config
-      const { data: wallet } = await supabase
-        .from("wallet_config")
-        .select("*")
-        .maybeSingle();
-
-      if (wallet) {
-        setWalletConfig(wallet as WalletConfig);
+      // Fetch wallet config via secure edge function (table is now locked down)
+      try {
+        const walletRes = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-config`,
+          {
+            headers: {
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+          }
+        );
+        if (walletRes.ok) {
+          const wallet = await walletRes.json();
+          setWalletConfig(wallet as WalletConfig);
+        }
+      } catch (e) {
+        console.error("Error fetching wallet config:", e);
       }
 
       // Fetch platform config

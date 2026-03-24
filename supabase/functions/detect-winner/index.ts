@@ -104,24 +104,31 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // --- Authentication: require secret or valid internal caller ---
+    const body = await req.json().catch(() => ({}));
+    const triggeredBy = body.triggered_by || "manual";
+    const forceFinalize = body.force_finalize === true;
+
+    const expectedSecret = Deno.env.get("ADMIN_SECRET_KEY");
+    const providedSecret = body.admin_secret || req.headers.get("x-admin-secret");
+    const isInternalCaller = triggeredBy === "ifttt_webhook" || triggeredBy === "cron";
+
+    if (!isInternalCaller && providedSecret !== expectedSecret) {
+      console.warn(`Unauthorized detect-winner call from: ${triggeredBy}`);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Load vault config from DB first, fall back to env vars
-    const { data: vaultConfig } = await supabase
-      .from("wallet_config")
-      .select("vault_api_url, vault_api_key")
-      .single();
-
-    const vaultUrl = vaultConfig?.vault_api_url || Deno.env.get("VAULT_URL");
-    const vaultPassword = vaultConfig?.vault_api_key || Deno.env.get("VAULT_PASSWORD");
+    // Use env vars only for vault credentials (never from DB)
+    const vaultUrl = Deno.env.get("VAULT_URL");
+    const vaultPassword = Deno.env.get("VAULT_PASSWORD");
     console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}`);
-
-    // Get request body for potential triggers
-    const body = await req.json().catch(() => ({}));
-    const triggeredBy = body.triggered_by || "manual";
-    const forceFinalize = body.force_finalize === true;
 
     // Check for open rounds where prediction time has ended
     const { data: openRound } = await supabase
@@ -396,13 +403,13 @@ async function finalizeRound(
 
   const { data: walletConfig } = await supabase
     .from("wallet_config")
-    .select("payout_percentage, vault_api_url, vault_api_key")
+    .select("payout_percentage")
     .single();
 
   const payoutPercentage = walletConfig?.payout_percentage || 20;
-  // Use DB vault config if available (overrides function params)
-  const effectiveVaultUrl = walletConfig?.vault_api_url || vaultUrl;
-  const effectiveVaultKey = walletConfig?.vault_api_key || vaultPassword;
+  // Always use env vars for vault credentials (never from DB)
+  const effectiveVaultUrl = vaultUrl;
+  const effectiveVaultKey = vaultPassword;
 
   let vaultBalance = 0;
   if (effectiveVaultUrl) {
