@@ -82,7 +82,7 @@ npx supabase functions deploy
 
 | Secret | Required | Description |
 |--------|----------|-------------|
-| `ADMIN_SECRET_KEY` | **Yes** | Password for admin panel login (e.g. `12345` or a strong random string). |
+| `ADMIN_SECRET_KEY` | **Yes** | Password for admin panel login (use a strong random string). |
 | `IFTTT_WEBHOOK_SECRET` | Optional | If set, IFTTT must send this in header `x-webhook-secret` or query `?secret=...`. |
 | `SOLANA_RPC_URL` | Optional | RPC for token checks (default: `https://api.mainnet-beta.solana.com`). |
 | `VAULT_URL` | Optional | Reward vault API base URL (for payouts). |
