@@ -17,16 +17,35 @@ export const WalletSettings = ({ adminSecretKey }: { adminSecretKey: string }) =
 
   useEffect(() => {
     const loadConfig = async () => {
-      const { data } = await supabase.from("wallet_config").select("*").maybeSingle();
-      if (data) {
-        setConfig({
-          tokenContract: data.token_contract_address || "",
-          minTokenBalance: data.min_token_balance || 1,
-        });
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              action: "get_wallet_config",
+              adminWallet: "private_admin",
+              adminSecretKey,
+            }),
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setConfig({
+            tokenContract: data.token_contract_address || "",
+            minTokenBalance: data.min_token_balance || 1,
+          });
+        }
+      } catch (e) {
+        console.error("Error loading wallet config:", e);
       }
     };
     loadConfig();
-  }, []);
+  }, [adminSecretKey]);
 
   const handleSave = async () => {
     setSaving(true);
