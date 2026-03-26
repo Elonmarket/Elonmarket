@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify admin access
-    const expectedSecretKey = Deno.env.get("ADMIN_SECRET_KEY");
+    const expectedSecretKey = Deno.env.get("VITE_ADMIN_SECRET_KEY") || Deno.env.get("ADMIN_SECRET_KEY");
     
     if (adminWallet === "private_admin") {
       if (!adminSecretKey || adminSecretKey !== expectedSecretKey) {
