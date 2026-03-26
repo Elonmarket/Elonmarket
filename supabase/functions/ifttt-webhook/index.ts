@@ -21,13 +21,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ── Auth ────────────────────────────────────────────
+    // ── Auth (fail-closed) ──────────────────────────────
+    // SECURITY: If IFTTT_WEBHOOK_SECRET is not configured, reject ALL requests.
     const webhookSecret = Deno.env.get("IFTTT_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      console.error("IFTTT_WEBHOOK_SECRET is not configured — rejecting request (fail-closed)");
+      return new Response(JSON.stringify({ error: "Server misconfiguration: webhook secret not set" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const providedSecret =
       req.headers.get("x-webhook-secret") ||
       new URL(req.url).searchParams.get("secret");
 
-    if (webhookSecret && providedSecret !== webhookSecret) {
+    if (providedSecret !== webhookSecret) {
+      console.error("Invalid webhook secret provided");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
