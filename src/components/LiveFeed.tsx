@@ -125,8 +125,12 @@ function highlightMatchesInText(text: string, options: string[]): React.ReactNod
   );
 }
 
-// Match on main text + quoted text so quote RTs (e.g. "Tesla" in quoted content) are detected
-const getTextForMatching = (t: Tweet) => [t.text, t.quoted_tweet_text].filter(Boolean).join("\n");
+// Match on main text + quoted text, but strip "RT by @username:" headers
+// so that account display names (e.g. "Tesla") don't cause false keyword matches
+const getTextForMatching = (t: Tweet) => {
+  const mainText = (t.text ?? "").replace(/^RT by @\S+:\s*/i, "");
+  return [mainText, t.quoted_tweet_text].filter(Boolean).join("\n");
+};
 
 const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet: Tweet; index: number; predictionOptions: string[] }, ref: React.ForwardedRef<HTMLDivElement>) => {
   const matchingOptions = detectMatchingOptions(getTextForMatching(tweet), predictionOptions);
