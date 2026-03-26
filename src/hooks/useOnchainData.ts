@@ -81,7 +81,8 @@ async function fetchOnchainData(): Promise<OnchainData | null> {
 
   inFlightRequest = (async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onchain-data`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/onchain-data`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
