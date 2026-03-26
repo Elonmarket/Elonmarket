@@ -437,7 +437,8 @@ async function finalizeRound(
   if (effectiveVaultUrl) {
     try {
       const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
-      const emptyBody = JSON.stringify({});
+      // GET request: FastAPI reads empty body, so sign empty string
+      const emptyBody = "";
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey("raw", encoder.encode(hmacSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
       const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(emptyBody));
