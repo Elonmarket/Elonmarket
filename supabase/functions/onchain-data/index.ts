@@ -148,8 +148,8 @@ async function getVaultInfo(vaultUrl: string, apiKey: string, hmacSecret: string
   }
 
   try {
-    const emptyBody = JSON.stringify({});
-    const hmacHex = await generateHMAC(emptyBody, hmacSecret);
+    // GET request: FastAPI reads empty body, so sign empty string
+    const hmacHex = await generateHMAC("", hmacSecret);
 
     const balRes = await fetch(`${vaultUrl}/balance`, {
       headers: {
