@@ -165,9 +165,11 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;
 
-  // Always link to elonmusk's status page so retweets/reposts stay visible on his profile
-  const tweetUrl =
-    tweet.tweet_id
+  // For reposts, link to Elon's profile (repost ID isn't available from IFTTT);
+  // for regular posts/quotes, link directly to the tweet on Elon's timeline.
+  const tweetUrl = isRepost
+    ? "https://x.com/elonmusk"
+    : tweet.tweet_id
       ? `https://x.com/elonmusk/status/${tweet.tweet_id}`
       : tweet.tweet_url;
 
