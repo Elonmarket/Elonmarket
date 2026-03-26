@@ -86,23 +86,8 @@ export function usePredictionRound() {
       if (round) {
         setCurrentRound(round as PredictionRound);
 
-        // If the round is still marked as open but the end time has passed,
-        // trigger the winner detection function to finalize it as 'no_winner'
-        const endTime = parseToUTC(round.end_time);
-        if (round.status === "open" && endTime <= new Date() && !isDetectingRef.current) {
-          console.log("Round end time reached, triggering winner detection...");
-          isDetectingRef.current = true;
-          supabase.functions.invoke("detect-winner", {
-            body: { force_finalize: true, triggered_by: "client_timer" }
-          }).then(({ data, error }) => {
-            if (error) console.error("Error triggering winner detection:", error);
-            else console.log("Winner detection triggered:", data);
-            // Refetch to get the updated status
-            fetchCurrentRound();
-          }).finally(() => {
-            isDetectingRef.current = false;
-          });
-        }
+        // Note: winner detection is handled server-side by the webhook/cron.
+        // The client no longer triggers detect-winner directly (anon key is not authorized).
 
         // Fetch options for this round
         const { data: optionsData } = await supabase
