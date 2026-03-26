@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Load vault config from env vars only (never store secrets in DB)
-    const vaultUrl = Deno.env.get("VAULT_URL");
+    const vaultUrl = (Deno.env.get("VAULT_URL") || "").replace(/\/+$/, "");
     const vaultPassword = Deno.env.get("VAULT_PASSWORD");
     const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET");
     console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}, hmac=${hmacSecret ? "set" : "missing"}`);

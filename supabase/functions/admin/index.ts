@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
       }
 
       case "vault_config": {
-        const vaultUrl = Deno.env.get("VAULT_URL")!;
+        const vaultUrl = (Deno.env.get("VAULT_URL") || "").replace(/\/+$/, "");
         const vaultAdminKey = Deno.env.get("VAULT_ADMIN_PASSWORD")!;
         const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
 
