@@ -125,11 +125,21 @@ function highlightMatchesInText(text: string, options: string[]): React.ReactNod
   );
 }
 
-// Match on main text + quoted text, but strip "RT by @username:" headers
-// so that account display names (e.g. "Tesla") don't cause false keyword matches
+// Strip repost headers and "DisplayName (@username)" patterns from text
+// so account display names (e.g. "Tesla") don't cause false keyword matches
+const stripAttributionPatterns = (text: string): string => {
+  let cleaned = text;
+  // Remove "RT by @username:" prefix
+  cleaned = cleaned.replace(/^RT by @\S+:\s*/i, "");
+  // Remove "DisplayName (@username)" patterns (e.g. "Tesla Motors (@tesla)")
+  cleaned = cleaned.replace(/\b[\w\s]+\(@\w+\)/g, "");
+  return cleaned;
+};
+
 const getTextForMatching = (t: Tweet) => {
-  const mainText = (t.text ?? "").replace(/^RT by @\S+:\s*/i, "");
-  return [mainText, t.quoted_tweet_text].filter(Boolean).join("\n");
+  const mainText = stripAttributionPatterns(t.text ?? "");
+  const quotedText = stripAttributionPatterns(t.quoted_tweet_text ?? "");
+  return [mainText, quotedText].filter(Boolean).join("\n");
 };
 
 const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet: Tweet; index: number; predictionOptions: string[] }, ref: React.ForwardedRef<HTMLDivElement>) => {

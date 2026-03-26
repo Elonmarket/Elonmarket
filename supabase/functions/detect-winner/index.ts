@@ -5,9 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/** Combined text for matching: main tweet + quoted tweet (so quote RTs can win on the quoted content). */
+/** Strip repost headers and "DisplayName (@username)" patterns so account names don't cause false matches. */
+function stripAttributionPatterns(text: string): string {
+  let cleaned = text;
+  // Remove "RT by @username:" prefix
+  cleaned = cleaned.replace(/^RT by @\S+:\s*/i, "");
+  // Remove "DisplayName (@username)" patterns (e.g. "Tesla Motors (@tesla)")
+  cleaned = cleaned.replace(/\b[\w\s]+\(@\w+\)/g, "");
+  return cleaned;
+}
+
+/** Combined text for matching: main tweet + quoted tweet, with attribution stripped. */
 function getTweetTextForMatching(tweet: { text?: string | null; quoted_tweet_text?: string | null }): string {
-  return [tweet.text ?? "", tweet.quoted_tweet_text ?? ""].filter(Boolean).join("\n");
+  const mainText = stripAttributionPatterns(tweet.text ?? "");
+  const quotedText = stripAttributionPatterns(tweet.quoted_tweet_text ?? "");
+  return [mainText, quotedText].filter(Boolean).join("\n");
 }
 
 /**
