@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     // ── Authorization check ─────────────────────────────
-    // Allow: service_role token, admin secret key, or valid anon/user JWT
+    // Allow ONLY: service_role token or admin secret key
+    // The anon key is PUBLIC and must NEVER be accepted here
     const authHeader = req.headers.get("Authorization") || "";
     const bearerToken = authHeader.replace("Bearer ", "");
     const adminKey = req.headers.get("x-admin-key") || "";
@@ -116,10 +117,8 @@ Deno.serve(async (req) => {
 
     const isServiceRole = bearerToken === supabaseServiceKey;
     const isAdminKey = adminKey !== "" && adminKey === expectedAdminKey;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const isAnonKey = bearerToken !== "" && bearerToken === anonKey;
 
-    if (!isServiceRole && !isAdminKey && !isAnonKey) {
+    if (!isServiceRole && !isAdminKey) {
       console.error("Unauthorized detect-winner call: no valid credential provided");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -127,8 +126,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Auth OK — caller: ${isServiceRole ? "service_role" : isAdminKey ? "admin_key" : "anon_key"}`);
-
+    console.log(`Auth OK — caller: ${isServiceRole ? "service_role" : "admin_key"}`);
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Load vault config from env vars only (never store secrets in DB)
