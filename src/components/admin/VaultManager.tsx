@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { adminSupabase, getAdminFunctionHeaders, getAdminFunctionUrl } from "@/lib/adminBackend";
 
 export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => {
   const { toast } = useToast();
@@ -30,8 +30,8 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
   useEffect(() => {
     const loadData = async () => {
       const [{ data: walletConfig }, { data: walletBalances }] = await Promise.all([
-        adminSupabase.from("wallet_config").select("*").maybeSingle(),
-        adminSupabase.from("wallet_balances").select("*").maybeSingle(),
+        supabase.from("wallet_config").select("*").maybeSingle(),
+        supabase.from("wallet_balances").select("*").maybeSingle(),
       ]);
 
       if (walletConfig) {
@@ -54,16 +54,22 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
   }, []);
 
   const callAdmin = async (action: string, data?: any) => {
-    const response = await fetch(getAdminFunctionUrl("admin"), {
-      method: "POST",
-      headers: getAdminFunctionHeaders(),
-      body: JSON.stringify({
-        action,
-        adminWallet: "private_admin",
-        adminSecretKey,
-        data,
-      }),
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action,
+          adminWallet: "private_admin",
+          adminSecretKey,
+          data,
+        }),
+      }
+    );
     if (!response.ok) {
       const err = await response.json();
       throw new Error(err.error || "Request failed");

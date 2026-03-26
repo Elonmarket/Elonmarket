@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { adminSupabase, getAdminFunctionHeaders, getAdminFunctionUrl } from "@/lib/adminBackend";
 
 export const WalletSettings = ({ adminSecretKey }: { adminSecretKey: string }) => {
   const { toast } = useToast();
@@ -17,7 +17,7 @@ export const WalletSettings = ({ adminSecretKey }: { adminSecretKey: string }) =
 
   useEffect(() => {
     const loadConfig = async () => {
-      const { data } = await adminSupabase.from("wallet_config").select("*").maybeSingle();
+      const { data } = await supabase.from("wallet_config").select("*").maybeSingle();
       if (data) {
         setConfig({
           tokenContract: data.token_contract_address || "",
@@ -31,16 +31,22 @@ export const WalletSettings = ({ adminSecretKey }: { adminSecretKey: string }) =
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch(getAdminFunctionUrl("admin"), {
-        method: "POST",
-        headers: getAdminFunctionHeaders(),
-        body: JSON.stringify({
-          action: "update_wallet_config",
-          adminWallet: "private_admin",
-          adminSecretKey,
-          data: config,
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: "update_wallet_config",
+            adminWallet: "private_admin",
+            adminSecretKey,
+            data: config,
+          }),
+        }
+      );
       if (!response.ok) throw new Error("Failed to save");
       toast({ title: "Saved!", description: "Wallet settings updated." });
     } catch {

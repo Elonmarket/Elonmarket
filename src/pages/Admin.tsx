@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { RoundManager } from "@/components/admin/RoundManager";
 import { WalletSettings } from "@/components/admin/WalletSettings";
 import { VaultManager } from "@/components/admin/VaultManager";
-import { getAdminFunctionHeaders, getAdminFunctionUrl } from "@/lib/adminBackend";
+
 
 const Admin = () => {
   const [adminSecretKey, setAdminSecretKey] = useState("");
@@ -22,15 +22,21 @@ const Admin = () => {
       return;
     }
     try {
-      const response = await fetch(getAdminFunctionUrl("admin"), {
-        method: "POST",
-        headers: getAdminFunctionHeaders(),
-        body: JSON.stringify({
-          action: "verify_admin",
-          adminWallet: "private_admin",
-          adminSecretKey: adminSecretKey.trim(),
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: "verify_admin",
+            adminWallet: "private_admin",
+            adminSecretKey: adminSecretKey.trim(),
+          }),
+        }
+      );
       if (response.ok) {
         setIsAuthenticated(true);
         setAuthError("");
