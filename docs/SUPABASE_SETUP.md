@@ -133,7 +133,8 @@ If the prediction **window ends** and no new tweet arrives, the round will not m
 2. New cron job:
    - **URL:** `https://YOUR_PROJECT_REF.supabase.co/functions/v1/detect-winner`
    - **Method:** POST
-   - **Headers:** `Authorization: Bearer YOUR_ANON_KEY` and `Content-Type: application/json`
+   - **Headers:** `Authorization: Bearer YOUR_SERVICE_ROLE_KEY`, `x-admin-key: YOUR_ADMIN_SECRET_KEY`, and `Content-Type: application/json`
+   - **Note:** The anon key is NOT accepted. Use either `service_role` token or `x-admin-key` header.
    - **Schedule:** Every 2 minutes (`*/2 * * * *`).
 
 **Option B – Supabase pg_cron (if enabled)**
