@@ -436,9 +436,17 @@ async function finalizeRound(
   let vaultBalance = 0;
   if (effectiveVaultUrl) {
     try {
+      const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
+      const emptyBody = JSON.stringify({});
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey("raw", encoder.encode(hmacSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(emptyBody));
+      const hmacHex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+
       const vaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         "x-api-key": effectiveVaultKey || "",
+        "X-HMAC-SIGNATURE": hmacHex,
       };
       const balRes = await fetch(`${effectiveVaultUrl}/balance`, { headers: vaultHeaders });
       if (balRes.ok) {
