@@ -11,7 +11,6 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [draining, setDraining] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [newOwner, setNewOwner] = useState("");
 

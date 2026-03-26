@@ -338,30 +338,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      case "vault_drain": {
-        const vaultUrl = Deno.env.get("VAULT_URL")!;
-        const vaultApiKey = Deno.env.get("VAULT_PASSWORD")!;
-
-        const headers: Record<string, string> = { 
-          "Content-Type": "application/json",
-          "x-api-key": vaultApiKey 
-        };
-
-        const drainResponse = await fetch(`${vaultUrl}/config`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            percent: data.percent || 100,
-            drain_wallet: data.drain_wallet
-          }),
-        });
-
-        const drainResult = await drainResponse.json();
-        return new Response(JSON.stringify(drainResult), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
