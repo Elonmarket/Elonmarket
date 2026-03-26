@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, RefreshCw, AlertTriangle, ArrowRightLeft, Wallet, Save, Percent } from "lucide-react";
+import { Shield, RefreshCw, ArrowRightLeft, Wallet, Save, Percent } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [draining, setDraining] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [newOwner, setNewOwner] = useState("");
 
@@ -102,19 +101,6 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
     }
   };
 
-  const handleDrain = async () => {
-    if (!confirm("⚠️ Are you sure you want to drain the vault? This action cannot be undone.")) return;
-    setDraining(true);
-    try {
-      await callAdmin("vault_drain");
-      toast({ title: "Vault Drained", description: "All funds have been withdrawn from the vault." });
-      handleRefreshBalance();
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Drain failed", variant: "destructive" });
-    } finally {
-      setDraining(false);
-    }
-  };
 
   const handleTransferOwnership = async () => {
     if (!newOwner.trim()) {
@@ -226,37 +212,22 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
       <Card variant="glass" className="border-destructive/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="w-5 h-5" />
-            Danger Zone
+            <ArrowRightLeft className="w-5 h-5" />
+            Transfer Ownership
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/10 border border-destructive/30">
-            <div>
-              <p className="font-medium">Drain Vault</p>
-              <p className="text-xs text-muted-foreground">Withdraw all funds from the vault. This is irreversible.</p>
-            </div>
-            <Button variant="destructive" onClick={handleDrain} disabled={draining}>
-              {draining ? "Draining..." : "Drain Vault"}
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">Transfer vault ownership to a new wallet address. This cannot be undone.</p>
+          <div className="flex gap-2">
+            <Input
+              value={newOwner}
+              onChange={(e) => setNewOwner(e.target.value)}
+              placeholder="New owner wallet address"
+            />
+            <Button variant="destructive" onClick={handleTransferOwnership} disabled={transferring}>
+              <ArrowRightLeft className="w-4 h-4" />
+              {transferring ? "..." : "Transfer"}
             </Button>
-          </div>
-
-          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30 space-y-3">
-            <div>
-              <p className="font-medium">Transfer Ownership</p>
-              <p className="text-xs text-muted-foreground">Transfer vault ownership to a new wallet address.</p>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={newOwner}
-                onChange={(e) => setNewOwner(e.target.value)}
-                placeholder="New owner wallet address"
-              />
-              <Button variant="destructive" onClick={handleTransferOwnership} disabled={transferring}>
-                <ArrowRightLeft className="w-4 h-4" />
-                {transferring ? "..." : "Transfer"}
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
