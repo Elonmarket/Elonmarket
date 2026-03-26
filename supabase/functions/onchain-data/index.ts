@@ -138,9 +138,12 @@ async function getVaultInfo(vaultUrl: string, apiKey: string, hmacSecret: string
   let balance = 0;
 
   try {
+    console.log("Vault URL used:", vaultUrl);
     const fundRes = await fetch(`${vaultUrl}/fund`);
+    console.log("Fund response status:", fundRes.status);
     if (fundRes.ok) {
       const fundData = await fundRes.json();
+      console.log("Fund data:", JSON.stringify(fundData));
       address = fundData.vault_address || fundData.address || "";
     }
   } catch (e) {
