@@ -144,7 +144,8 @@ Deno.serve(async (req) => {
     // Load vault config from env vars only (never store secrets in DB)
     const vaultUrl = Deno.env.get("VAULT_URL");
     const vaultPassword = Deno.env.get("VAULT_PASSWORD");
-    console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}`);
+    const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET");
+    console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}, hmac=${hmacSecret ? "set" : "missing"}`);
 
     // Get request body for potential triggers
     const body = await req.json().catch(() => ({}));
@@ -435,9 +436,17 @@ async function finalizeRound(
   let vaultBalance = 0;
   if (effectiveVaultUrl) {
     try {
+      const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
+      const emptyBody = JSON.stringify({});
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey("raw", encoder.encode(hmacSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(emptyBody));
+      const hmacHex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+
       const vaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         "x-api-key": effectiveVaultKey || "",
+        "X-HMAC-SIGNATURE": hmacHex,
       };
       const balRes = await fetch(`${effectiveVaultUrl}/balance`, { headers: vaultHeaders });
       if (balRes.ok) {
@@ -489,20 +498,29 @@ async function finalizeRound(
     }
 
     try {
+      const lamports = Math.round(perWinnerPayout * 1_000_000_000);
+      const payoutBody = JSON.stringify({
+        round_id: round.id,
+        winner_wallet: vote.wallet_address,
+        lamports: lamports,
+      });
+
+      const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey("raw", encoder.encode(hmacSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payoutBody));
+      const hmacHex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "x-api-key": effectiveVaultKey || "",
+        "X-HMAC-SIGNATURE": hmacHex,
       };
 
-      const lamports = Math.round(perWinnerPayout * 1_000_000_000);
       const res = await fetch(`${effectiveVaultUrl}/payout`, {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          round_id: round.id,
-          winner_wallet: vote.wallet_address,
-          lamports: lamports,
-        }),
+        body: payoutBody,
       });
 
       if (!res.ok) {
@@ -543,8 +561,14 @@ async function finalizeRound(
   // Update wallet_balances so the UI reflects the new vault balance after payout
   if (successfulPayouts > 0 && effectiveVaultUrl) {
     try {
+      const hmacSecret2 = Deno.env.get("VAULT_HMAC_SECRET") || "";
+      const encoder2 = new TextEncoder();
+      const key2 = await crypto.subtle.importKey("raw", encoder2.encode(hmacSecret2), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sig2 = await crypto.subtle.sign("HMAC", key2, encoder2.encode(JSON.stringify({})));
+      const hmacHex2 = Array.from(new Uint8Array(sig2)).map(b => b.toString(16).padStart(2, "0")).join("");
+
       const postPayoutRes = await fetch(`${effectiveVaultUrl}/balance`, {
-        headers: { "x-api-key": effectiveVaultKey || "" },
+        headers: { "x-api-key": effectiveVaultKey || "", "X-HMAC-SIGNATURE": hmacHex2 },
       });
       if (postPayoutRes.ok) {
         const postPayoutData = await postPayoutRes.json();

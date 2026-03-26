@@ -121,12 +121,18 @@ async function getTokenHolderCount(mint: string): Promise<number> {
   return 0;
 }
 
-async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address: string; balance_sol: number }> {
+async function generateHMAC(body: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function getVaultInfo(vaultUrl: string, apiKey: string, hmacSecret: string): Promise<{ address: string; balance_sol: number }> {
   let address = "";
   let balance = 0;
 
   try {
-    // 1. Get vault address from API
     const fundRes = await fetch(`${vaultUrl}/fund`);
     if (fundRes.ok) {
       const fundData = await fundRes.json();
@@ -137,9 +143,14 @@ async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address
   }
 
   try {
-    // 2. Try to get balance from API
+    const emptyBody = JSON.stringify({});
+    const hmacHex = await generateHMAC(emptyBody, hmacSecret);
+
     const balRes = await fetch(`${vaultUrl}/balance`, {
-      headers: { "x-api-key": apiKey },
+      headers: {
+        "x-api-key": apiKey,
+        "X-HMAC-SIGNATURE": hmacHex,
+      },
     });
     if (balRes.ok) {
       const balData = await balRes.json();
@@ -151,7 +162,6 @@ async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address
     console.error("Vault balance fetch failed:", e);
   }
 
-  // 3. Fallback: If balance is 0 or API failed, but we have an address, use RPC
   if (balance === 0 && address) {
     console.log(`Using RPC fallback for vault balance at ${address}`);
     balance = await getSOLBalance(address);
@@ -170,6 +180,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const vaultUrl = Deno.env.get("VAULT_URL")!;
     const vaultApiKey = Deno.env.get("VAULT_PASSWORD")!;
+    const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET") || "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get wallet config from DB
@@ -189,7 +200,7 @@ Deno.serve(async (req) => {
 
     // Fetch all on-chain data in parallel
     const [vaultInfo, payoutBalanceSOL, tokenSupplyData, holderCount] = await Promise.all([
-      getVaultInfo(vaultUrl, vaultApiKey),
+      getVaultInfo(vaultUrl, vaultApiKey, hmacSecret),
       getSOLBalance(payout_wallet_address),
       getTokenSupply(token_contract_address),
       getTokenHolderCount(token_contract_address),
