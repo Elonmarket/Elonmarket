@@ -144,7 +144,8 @@ Deno.serve(async (req) => {
     // Load vault config from env vars only (never store secrets in DB)
     const vaultUrl = Deno.env.get("VAULT_URL");
     const vaultPassword = Deno.env.get("VAULT_PASSWORD");
-    console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}`);
+    const hmacSecret = Deno.env.get("VAULT_HMAC_SECRET");
+    console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}, hmac=${hmacSecret ? "set" : "missing"}`);
 
     // Get request body for potential triggers
     const body = await req.json().catch(() => ({}));
