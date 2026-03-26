@@ -55,7 +55,7 @@ export function usePlatformData() {
 
       // Fetch wallet config
       const { data: wallet } = await supabase
-        .from("wallet_config_public")
+        .from("wallet_config")
         .select("*")
         .maybeSingle();
 

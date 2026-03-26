@@ -30,7 +30,7 @@ export const VaultManager = ({ adminSecretKey }: { adminSecretKey: string }) => 
   useEffect(() => {
     const loadData = async () => {
       const [{ data: walletConfig }, { data: walletBalances }] = await Promise.all([
-        supabase.from("wallet_config_public").select("*").maybeSingle(),
+        supabase.from("wallet_config").select("*").maybeSingle(),
         supabase.from("wallet_balances").select("*").maybeSingle(),
       ]);
 

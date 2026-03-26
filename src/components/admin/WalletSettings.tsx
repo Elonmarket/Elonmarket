@@ -17,7 +17,7 @@ export const WalletSettings = ({ adminSecretKey }: { adminSecretKey: string }) =
 
   useEffect(() => {
     const loadConfig = async () => {
-      const { data } = await supabase.from("wallet_config_public").select("*").maybeSingle();
+      const { data } = await supabase.from("wallet_config").select("*").maybeSingle();
       if (data) {
         setConfig({
           tokenContract: data.token_contract_address || "",
