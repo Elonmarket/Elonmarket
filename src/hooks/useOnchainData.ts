@@ -24,93 +24,79 @@ export interface OnchainData {
 }
 
 const POLL_INTERVAL = 30_000;
-const REQUEST_DEDUPE_WINDOW = 5_000;
 const DEFAULT_PAYOUT_PERCENTAGE = 15;
 
 let cachedOnchainData: OnchainData | null = null;
-let inFlightRequest: Promise<OnchainData | null> | null = null;
-let lastFetchStartedAt = 0;
 
-async function getCachedWalletBalancesFallback(): Promise<OnchainData | null> {
-  const { data: balances } = await supabase
-    .from("wallet_balances")
-    .select("vault_balance_sol, payout_balance_sol, last_updated_at")
-    .maybeSingle();
+async function loadFromDatabase(): Promise<OnchainData | null> {
+  try {
+    const { data: balances } = await supabase
+      .from("wallet_balances")
+      .select("vault_balance_sol, payout_balance_sol, claimable_rewards_sol, last_updated_at")
+      .maybeSingle();
 
-  if (!balances) {
+    if (!balances) return null;
+
+    const vaultBalance = Number(balances.vault_balance_sol ?? 0);
+    const payoutPercentage = cachedOnchainData?.round_payout.percentage ?? DEFAULT_PAYOUT_PERCENTAGE;
+
+    return {
+      vault: {
+        address: cachedOnchainData?.vault.address ?? "",
+        balance_sol: vaultBalance,
+      },
+      payout: {
+        address: cachedOnchainData?.payout.address ?? "",
+        balance_sol: Number(balances.payout_balance_sol ?? 0),
+      },
+      token: cachedOnchainData?.token ?? {
+        address: "",
+        total_supply: 0,
+        decimals: 0,
+        holder_count: 0,
+      },
+      round_payout: {
+        percentage: payoutPercentage,
+        estimated_sol: vaultBalance * (payoutPercentage / 100),
+      },
+      fetched_at: balances.last_updated_at ?? new Date().toISOString(),
+    };
+  } catch (err) {
+    console.error("Failed to load wallet balances:", err);
     return cachedOnchainData;
   }
+}
 
-  const payoutPercentage = cachedOnchainData?.round_payout.percentage ?? DEFAULT_PAYOUT_PERCENTAGE;
+async function tryEdgeFunction(): Promise<OnchainData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("onchain-data", {
+      method: "POST",
+      body: {},
+    });
 
-  return {
-    vault: {
-      address: cachedOnchainData?.vault.address ?? "",
-      balance_sol: Number(balances.vault_balance_sol ?? 0),
-    },
-    payout: {
-      address: cachedOnchainData?.payout.address ?? "",
-      balance_sol: Number(balances.payout_balance_sol ?? 0),
-    },
-    token: cachedOnchainData?.token ?? {
-      address: "",
-      total_supply: 0,
-      decimals: 0,
-      holder_count: 0,
-    },
-    round_payout: {
-      percentage: payoutPercentage,
-      estimated_sol: Number(balances.vault_balance_sol ?? 0) * (payoutPercentage / 100),
-    },
-    fetched_at: balances.last_updated_at ?? new Date().toISOString(),
-  };
+    if (error) return null;
+
+    return data as OnchainData;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchOnchainData(): Promise<OnchainData | null> {
-  const now = Date.now();
-
-  if (inFlightRequest) {
-    return inFlightRequest;
+  // Always load from DB first (reliable)
+  const dbData = await loadFromDatabase();
+  if (dbData) {
+    cachedOnchainData = dbData;
   }
 
-  if (cachedOnchainData && now - lastFetchStartedAt < REQUEST_DEDUPE_WINDOW) {
-    return cachedOnchainData;
-  }
-
-  lastFetchStartedAt = now;
-
-  inFlightRequest = (async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onchain-data`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({}),
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const result = (await res.json()) as OnchainData;
-      cachedOnchainData = result;
-      return result;
-    } catch (err) {
-      console.error("Failed to fetch on-chain data:", err);
-      const fallback = await getCachedWalletBalancesFallback();
-      if (fallback) {
-        cachedOnchainData = fallback;
-      }
-      return fallback;
-    } finally {
-      inFlightRequest = null;
+  // Try edge function in background for fresh data (may fail in some environments)
+  tryEdgeFunction().then((edgeData) => {
+    if (edgeData) {
+      cachedOnchainData = edgeData;
     }
-  })();
+  });
 
-  return inFlightRequest;
+  return cachedOnchainData;
 }
 
 export function useOnchainData() {
