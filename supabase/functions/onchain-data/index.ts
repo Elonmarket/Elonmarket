@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { buildVaultHeaders, getVaultConfig } from "../_shared/vault.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,8 +139,9 @@ async function getVaultInfo(vaultUrl: string, apiKey: string): Promise<{ address
 
   try {
     // 2. Try to get balance from API
+    const headers = await buildVaultHeaders(apiKey, {});
     const balRes = await fetch(`${vaultUrl}/balance`, {
-      headers: { "x-api-key": apiKey },
+      headers,
     });
     if (balRes.ok) {
       const balData = await balRes.json();
@@ -168,8 +170,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vaultUrl = Deno.env.get("VAULT_URL")!;
-    const vaultApiKey = Deno.env.get("VAULT_PASSWORD")!;
+    const { url: vaultUrl, gameApiKey: vaultApiKey } = getVaultConfig();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get wallet config from DB

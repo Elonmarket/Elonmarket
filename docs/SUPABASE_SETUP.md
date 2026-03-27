@@ -85,8 +85,10 @@ npx supabase functions deploy
 | `ADMIN_SECRET_KEY` | **Yes** | Password for admin panel login (use a strong random string). |
 | `IFTTT_WEBHOOK_SECRET` | Optional | If set, IFTTT must send this in header `x-webhook-secret` or query `?secret=...`. |
 | `SOLANA_RPC_URL` | Optional | RPC for token checks (default: `https://api.mainnet-beta.solana.com`). |
-| `VAULT_URL` | Optional | Reward vault API base URL (for payouts). |
-| `VAULT_PASSWORD` | Optional | Sent as `x-vault-password` to vault. |
+| `VAULT_URL` | Optional | Reward vault API base URL. |
+| `VAULT_GAME_API_KEY` | Optional | Used for `/balance` and `/payout` requests. |
+| `VAULT_ADMIN_API_KEY` | Optional | Used for `/transactions` and `/config` requests. |
+| `VAULT_HMAC_SECRET` | Optional | Signs protected vault requests in `X-HMAC-SIGNATURE`. |
 
 CLI example:
 

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { buildVaultHeaders, getVaultConfig } from "../_shared/vault.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +11,8 @@ function stripAttributionPatterns(text: string): string {
   let cleaned = text;
   // Remove "RT by @username:" prefix
   cleaned = cleaned.replace(/^RT by @\S+:\s*/i, "");
-  // Remove "DisplayName (@username)" patterns (e.g. "Tesla Motors (@tesla)")
-  cleaned = cleaned.replace(/\b[\w\s]+\(@\w+\)/g, "");
+  // Remove attribution labels like "SpaceX (@SpaceX)" before keyword matching.
+  cleaned = cleaned.replace(/\b[^()\n]+?\s*\(@[A-Za-z0-9_]+\)/g, "");
   return cleaned;
 }
 
@@ -125,7 +126,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const bearerToken = authHeader.replace("Bearer ", "");
     const adminKey = req.headers.get("x-admin-key") || "";
-    const expectedAdminKey = Deno.env.get("VITE_ADMIN_SECRET_KEY") || Deno.env.get("ADMIN_SECRET_KEY") || "";
+    const expectedAdminKey = Deno.env.get("ADMIN_SECRET_KEY") || "";
 
     const isServiceRole = bearerToken === supabaseServiceKey;
     const isAdminKey = adminKey !== "" && adminKey === expectedAdminKey;
@@ -142,9 +143,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Load vault config from env vars only (never store secrets in DB)
-    const vaultUrl = Deno.env.get("VAULT_URL");
-    const vaultPassword = Deno.env.get("VAULT_PASSWORD");
-    console.log(`Vault config: url=${vaultUrl ? "set" : "missing"}, key=${vaultPassword ? "set" : "missing"}`);
+    const vaultConfig = getVaultConfig();
+    console.log(
+      `Vault config: url=${vaultConfig.url ? "set" : "missing"}, gameKey=${vaultConfig.gameApiKey ? "set" : "missing"}, hmac=${vaultConfig.hmacSecret ? "set" : "missing"}`,
+    );
 
     // Get request body for potential triggers
     const body = await req.json().catch(() => ({}));
@@ -174,13 +176,13 @@ Deno.serve(async (req) => {
 
     if (shouldFinalize) {
       console.log(`Finalizing round ${openRound.id}. Triggered by: ${triggeredBy}. Past end: ${isPastEndTime}. Force: ${forceFinalize}`);
-      return await processWinnerDetection(supabase, openRound, vaultUrl, vaultPassword, corsHeaders);
+      return await processWinnerDetection(supabase, openRound, vaultConfig.url, vaultConfig.gameApiKey, corsHeaders);
     }
 
     if (openRound.prediction_start_time) {
       const predictionStart = new Date(openRound.prediction_start_time);
       if (now >= predictionStart && now < endTime) {
-        return await processLiveDetection(supabase, openRound, vaultUrl, vaultPassword, corsHeaders);
+        return await processLiveDetection(supabase, openRound, vaultConfig.url, vaultConfig.gameApiKey, corsHeaders);
       }
     }
 
@@ -218,7 +220,7 @@ async function processLiveDetection(
   supabase: any,
   round: any,
   vaultUrl: string | undefined,
-  vaultPassword: string | undefined,
+  vaultGameApiKey: string | undefined,
   corsHeaders: Record<string, string>
 ) {
   const options = round.prediction_options as any[];
@@ -249,7 +251,7 @@ async function processLiveDetection(
         });
       }
 
-      return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
+      return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultGameApiKey, corsHeaders);
     }
   }
 
@@ -262,7 +264,7 @@ async function processWinnerDetection(
   supabase: any,
   round: any,
   vaultUrl: string | undefined,
-  vaultPassword: string | undefined,
+  vaultGameApiKey: string | undefined,
   corsHeaders: Record<string, string>
 ) {
   const locked = await lockRoundForProcessing(supabase, round.id);
@@ -298,7 +300,7 @@ async function processWinnerDetection(
 
     const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {
-      return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultPassword, corsHeaders);
+      return await finalizeRound(supabase, round, tweet, match.option, match.keywords, vaultUrl, vaultGameApiKey, corsHeaders);
     }
   }
 
@@ -361,7 +363,7 @@ async function finalizeRound(
   winningOption: any,
   matchedKeywords: string[],
   vaultUrl: string | undefined,
-  vaultPassword: string | undefined,
+  vaultGameApiKey: string | undefined,
   corsHeaders: Record<string, string>
 ) {
   await supabase
@@ -430,15 +432,12 @@ async function finalizeRound(
   const payoutPercentage = walletConfig?.payout_percentage || 20;
   // Vault credentials from env vars only (never from DB)
   const effectiveVaultUrl = vaultUrl;
-  const effectiveVaultKey = vaultPassword;
+  const effectiveVaultKey = vaultGameApiKey;
 
   let vaultBalance = 0;
   if (effectiveVaultUrl) {
     try {
-      const vaultHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
-        "x-api-key": effectiveVaultKey || "",
-      };
+      const vaultHeaders = await buildVaultHeaders(effectiveVaultKey || "", {});
       const balRes = await fetch(`${effectiveVaultUrl}/balance`, { headers: vaultHeaders });
       if (balRes.ok) {
         const balData = await balRes.json();
@@ -489,20 +488,17 @@ async function finalizeRound(
     }
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "x-api-key": effectiveVaultKey || "",
-      };
-
       const lamports = Math.round(perWinnerPayout * 1_000_000_000);
+      const payload = {
+        round_id: round.id,
+        winner_wallet: vote.wallet_address,
+        lamports,
+      };
+      const headers = await buildVaultHeaders(effectiveVaultKey || "", payload);
       const res = await fetch(`${effectiveVaultUrl}/payout`, {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          round_id: round.id,
-          winner_wallet: vote.wallet_address,
-          lamports: lamports,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -543,8 +539,9 @@ async function finalizeRound(
   // Update wallet_balances so the UI reflects the new vault balance after payout
   if (successfulPayouts > 0 && effectiveVaultUrl) {
     try {
+      const headers = await buildVaultHeaders(effectiveVaultKey || "", {});
       const postPayoutRes = await fetch(`${effectiveVaultUrl}/balance`, {
-        headers: { "x-api-key": effectiveVaultKey || "" },
+        headers,
       });
       if (postPayoutRes.ok) {
         const postPayoutData = await postPayoutRes.json();

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { buildVaultHeaders, getVaultConfig } from "../_shared/vault.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -260,8 +261,7 @@ Deno.serve(async (req) => {
 
 
       case "vault_refresh_balance": {
-        const vaultUrl = Deno.env.get("VAULT_URL")!;
-        const vaultApiKey = Deno.env.get("VAULT_PASSWORD")!;
+        const { url: vaultUrl, gameApiKey: vaultApiKey } = getVaultConfig();
 
         let vaultBalance = 0;
         let vaultAddress = "";
@@ -278,11 +278,7 @@ Deno.serve(async (req) => {
         }
 
         try {
-          const headers: Record<string, string> = { 
-            "Content-Type": "application/json",
-            "x-api-key": vaultApiKey 
-          };
-
+          const headers = await buildVaultHeaders(vaultApiKey, {});
           const vaultResponse = await fetch(`${vaultUrl}/balance`, {
             method: "GET",
             headers,
@@ -318,18 +314,14 @@ Deno.serve(async (req) => {
       }
 
       case "vault_config": {
-        const vaultUrl = Deno.env.get("VAULT_URL")!;
-        const vaultApiKey = Deno.env.get("VAULT_PASSWORD")!;
-
-        const headers: Record<string, string> = { 
-          "Content-Type": "application/json",
-          "x-api-key": vaultApiKey 
-        };
+        const { url: vaultUrl, adminApiKey: vaultApiKey } = getVaultConfig();
+        const payload = data || {};
+        const headers = await buildVaultHeaders(vaultApiKey, payload);
 
         const configResponse = await fetch(`${vaultUrl}/config`, {
           method: "POST",
           headers,
-          body: JSON.stringify(data), // { percent: 20 } or { percent: 20, drain_wallet: "..." }
+          body: JSON.stringify(payload), // { percent: 20 } or { percent: 20, drain_wallet: "..." }
         });
 
         const configResult = await configResponse.json();
