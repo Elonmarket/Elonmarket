@@ -290,7 +290,7 @@ const Docs = () => {
                       <div className="text-[10px] text-white/40 uppercase">App Name</div>
                       <div className="text-[10px] text-white/40 uppercase text-center">Status</div>
                       <div className="text-[10px] text-white/40 uppercase text-right">Uptime</div>
-                      <div className="text-xs">elon-stream</div>
+                      <div className="text-xs">elonmarket</div>
                       <div className="text-xs text-neon-green text-center">online</div>
                       <div className="text-xs text-right">142h</div>
                     </div>
