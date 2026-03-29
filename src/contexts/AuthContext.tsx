@@ -22,15 +22,8 @@ interface AuthContextType {
   error: string | null;
   register: (username: string, walletAddress: string, password: string) => Promise<boolean>;
   login: (username: string, password: string) => Promise<boolean>;
-  resetPassword: (
-    username: string,
-    walletAddress: string,
-    password: string,
-    challengeToken: string,
-    signature: string
-  ) => Promise<boolean>;
   logout: () => void;
-}
+  }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -158,56 +151,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
-  const resetPassword = useCallback(
-    async (
-      username: string,
-      walletAddress: string,
-      password: string,
-      challengeToken: string,
-      signature: string
-    ) => {
-      setError(null);
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-register`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              action: "reset-password",
-              username,
-              walletAddress,
-              password,
-              challengeToken,
-              signature,
-            }),
-          }
-        );
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error ?? "Password reset failed.");
-          return false;
-        }
-
-        if (data.user && data.sessionToken) {
-          saveUser(data.user as UserProfile, data.sessionToken as string);
-          return true;
-        }
-
-        setError("Password reset failed.");
-        return false;
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Password reset failed.");
-        return false;
-      }
-    },
-    []
-  );
-
   const logout = useCallback(() => {
     setUser(null);
     setSessionToken(null);
@@ -224,7 +167,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error,
         register,
         login,
-        resetPassword,
         logout,
       }}
     >

@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import bs58 from "https://esm.sh/bs58@6.0.0";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
-import { createPasswordChallenge, createSessionToken, verifyPasswordChallenge } from "../_shared/auth.ts";
+import { createSessionToken } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,14 +55,7 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
-function challengeMessage(username: string, walletAddress: string, token: string): string {
-  return [
-    "Elonmarket password reset",
-    `Username: ${username}`,
-    `Wallet: ${walletAddress}`,
-    `Challenge: ${token}`,
-  ].join("\n");
-}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -79,42 +72,8 @@ Deno.serve(async (req) => {
     const username = (body.username ?? body.display_name ?? "").trim();
     const walletAddress = (body.walletAddress ?? body.wallet_address ?? "").trim();
     const password = typeof body.password === "string" ? body.password : "";
-    const challengeToken = typeof body.challengeToken === "string" ? body.challengeToken : "";
-    const signature = typeof body.signature === "string" ? body.signature : "";
 
-    if (action === "request-password-challenge") {
-      if (!username || !walletAddress) {
-        return new Response(
-          JSON.stringify({ error: "Username and wallet address are required." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
 
-      const { data: profile, error: selectError } = await supabase
-        .from("profiles")
-        .select("display_name, wallet_address")
-        .ilike("display_name", username.replace(/[%_\\]/g, "\\$&"))
-        .eq("wallet_address", walletAddress)
-        .limit(1)
-        .maybeSingle();
-
-      if (selectError || !profile) {
-        return new Response(
-          JSON.stringify({ error: "Account not found for that username and wallet." }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const { token, message } = await createPasswordChallenge({
-        username: profile.display_name ?? username,
-        walletAddress: profile.wallet_address,
-      });
-
-      return new Response(
-        JSON.stringify({ challengeToken: token, message }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     if (!username) {
       return new Response(
@@ -137,89 +96,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (action === "reset-password") {
-      if (!walletAddress || !challengeToken || !signature) {
-        return new Response(
-          JSON.stringify({ error: "Wallet address, challenge token, and signature are required." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
 
-      const challenge = await verifyPasswordChallenge(challengeToken);
-      if (!challenge) {
-        return new Response(
-          JSON.stringify({ error: "Challenge expired or invalid. Request a new reset challenge." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      if (challenge.username.toLowerCase() !== username.toLowerCase() || challenge.walletAddress !== walletAddress) {
-        return new Response(
-          JSON.stringify({ error: "Challenge does not match this username and wallet." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const { data: profile, error: selectError } = await supabase
-        .from("profiles")
-        .select("id, display_name, wallet_address, total_wins, total_predictions, total_claimed_usd, unclaimed_rewards_sol")
-        .ilike("display_name", username.replace(/[%_\\]/g, "\\$&"))
-        .eq("wallet_address", walletAddress)
-        .limit(1)
-        .maybeSingle();
-
-      if (selectError || !profile) {
-        return new Response(
-          JSON.stringify({ error: "Account not found for that username and wallet." }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const signedMessage = new TextEncoder().encode(
-        challengeMessage(profile.display_name ?? username, walletAddress, challengeToken),
-      );
-      const publicKey = bs58.decode(walletAddress);
-      const signatureBytes = Uint8Array.from(atob(signature), (char) => char.charCodeAt(0));
-
-      const validSignature = nacl.sign.detached.verify(signedMessage, signatureBytes, publicKey);
-      if (!validSignature) {
-        return new Response(
-          JSON.stringify({ error: "Wallet signature verification failed." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const salt = crypto.getRandomValues(new Uint8Array(16));
-      const passwordHash = await hashPassword(password, salt);
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          password_hash: passwordHash,
-          password_salt: encodeBase64(salt),
-          password_updated_at: new Date().toISOString(),
-        })
-        .eq("id", profile.id);
-
-      if (updateError) {
-        return new Response(
-          JSON.stringify({ error: updateError.message || "Password reset failed." }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({
-          user: profile,
-          sessionToken: await createSessionToken({
-            userId: profile.id,
-            username: profile.display_name ?? username,
-            walletAddress: profile.wallet_address,
-          }),
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     if (action === "register") {
       if (!walletAddress) {

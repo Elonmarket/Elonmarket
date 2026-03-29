@@ -14,9 +14,9 @@ interface AuthModalProps {
 }
 
 export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
-  const { login, register, resetPassword, error } = useAuth();
+  const { login, register, error } = useAuth();
   const { connected, publicKey, signMessage } = useWallet();
-  const [mode, setMode] = useState<"login" | "register" | "reset">("login");
+  const [mode, setMode] = useState<"login" | "register">("login"); // Removed "reset"
   const [username, setUsername] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +25,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if ((mode === "reset" || mode === "register") && publicKey && !walletAddress) {
+    if (mode === "register" && publicKey && !walletAddress) {
       setWalletAddress(publicKey.toBase58());
     }
   }, [mode, publicKey, walletAddress]);
@@ -38,14 +38,14 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     setLocalSuccess(null);
   };
 
-  const toBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
+  // Removed toBase64 as it was only used in resetPassword logic.
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
     setLocalSuccess(null);
 
-    if (!username.trim() || !password.trim() || ((mode === "register" || mode === "reset") && !walletAddress.trim())) {
+    if (!username.trim() || !password.trim() || (mode === "register" && !walletAddress.trim())) {
       setLocalError(
         mode === "login"
           ? "Username and password are required"
@@ -61,7 +61,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
       setLocalError("Password must be at least 8 characters");
       return;
     }
-    if (mode === "register" || mode === "reset") {
+    if (mode === "register") { // Simplified validation for register mode only
       // Basic Solana address validation (base58, 32-44 chars)
       if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddress.trim())) {
         setLocalError("Invalid Solana wallet address");
@@ -74,62 +74,9 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
     if (mode === "login") {
       success = await login(username.trim(), password);
-    } else if (mode === "register") {
+    } else { // mode === "register"
+      // Wallet address is still required for registration
       success = await register(username.trim(), walletAddress.trim(), password);
-    } else {
-      if (!connected || !publicKey) {
-        setLocalError("Connect the registered wallet to set or reset the password.");
-        setSubmitting(false);
-        return;
-      }
-      if (publicKey.toBase58() !== walletAddress.trim()) {
-        setLocalError("The connected wallet must match the wallet address on the account.");
-        setSubmitting(false);
-        return;
-      }
-      if (!signMessage) {
-        setLocalError("This wallet does not support message signing.");
-        setSubmitting(false);
-        return;
-      }
-
-      try {
-        const challengeRes = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-register`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              action: "request-password-challenge",
-              username: username.trim(),
-              walletAddress: walletAddress.trim(),
-            }),
-          }
-        );
-        const challengeData = await challengeRes.json();
-
-        if (!challengeRes.ok || !challengeData.challengeToken || !challengeData.message) {
-          setLocalError(challengeData.error ?? "Could not start password reset.");
-          setSubmitting(false);
-          return;
-        }
-
-        const signed = await signMessage(new TextEncoder().encode(challengeData.message as string));
-        success = await resetPassword(
-          username.trim(),
-          walletAddress.trim(),
-          password,
-          challengeData.challengeToken as string,
-          toBase64(signed),
-        );
-      } catch (err) {
-        setLocalError(err instanceof Error ? err.message : "Password reset failed.");
-        setSubmitting(false);
-        return;
-      }
     }
     setSubmitting(false);
 
@@ -139,6 +86,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     }
   };
 
+
   const displayError = localError || error;
 
   return (
@@ -146,7 +94,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
-            {mode === "login" ? "Login" : mode === "register" ? "Register" : "Set or Reset Password"}
+            {mode === "login" ? "Login" : "Register"}
           </DialogTitle>
         </DialogHeader>
 
@@ -165,7 +113,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             />
           </div>
 
-          {(mode === "register" || mode === "reset") && (
+          {(mode === "register") && (
             <div className="space-y-2">
               <Label htmlFor="wallet" className="flex items-center gap-2">
                 <Wallet className="w-3.5 h-3.5" />
@@ -178,11 +126,6 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                 onChange={(e) => setWalletAddress(e.target.value)}
                 className="bg-muted/50 font-mono text-xs"
               />
-              {mode === "reset" && (
-                <div className="pt-2">
-                  <WalletMultiButton className="!h-10 !w-full !rounded-md !text-sm" />
-                </div>
-              )}
             </div>
           )}
 
@@ -219,9 +162,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               ? "Please wait..."
               : mode === "login"
                 ? "Login"
-                : mode === "register"
-                  ? "Create Account"
-                  : "Sign Wallet and Set Password"}
+                : "Create Account"}
           </Button>
 
           {/* Apply mt-6 for 24px vertical gap */}
@@ -232,7 +173,7 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                   Don't have an account?{" "}
                   <button
                     type="button"
-                    className="text-neon-cyan hover:underline font-medium" // Added font-medium
+                    className="text-neon-cyan hover:underline font-medium"
                     onClick={() => {
                       setMode("register");
                       resetState();
@@ -240,39 +181,13 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                   >
                     Register
                   </button>
-                  {" · "}
-                  <button
-                    type="button"
-                    className="text-neon-cyan hover:underline font-normal opacity-85" // Added font-normal opacity-85
-                    onClick={() => {
-                      setMode("reset");
-                      resetState();
-                      if (publicKey) setWalletAddress(publicKey.toBase58());
-                    }}
-                  >
-                    Forgot password / old account
-                  </button>
                 </>
-              ) : mode === "register" ? (
+              ) : (
                 <>
                   Already registered?{" "}
                   <button
                     type="button"
-                    className="text-neon-cyan hover:underline font-medium" // Added font-medium
-                    onClick={() => {
-                      setMode("login");
-                      resetState();
-                    }}
-                  >
-                    Login
-                  </button>
-                </>
-              ) : (
-                <>
-                  Back to{" "}
-                  <button
-                    type="button"
-                    className="text-neon-cyan hover:underline font-medium" // Added font-medium
+                    className="text-neon-cyan hover:underline font-medium"
                     onClick={() => {
                       setMode("login");
                       resetState();
@@ -284,12 +199,10 @@ export const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               )}
             </p>
 
-            <p className="text-sm text-muted-foreground text-center"> {/* Changed text-xs to text-sm, kept text-center */}
+            <p className="text-sm text-muted-foreground text-center">
               {mode === "register"
                 ? "Your wallet stays linked to your account, and your password protects access."
-                : mode === "reset"
-                  ? "For legacy accounts or forgotten passwords, connect the registered wallet and sign the reset challenge."
-                  : "Login uses your username and password. Wallet access is not required here."}
+                : "Login uses your username and password. Wallet access is not required here."}
             </p>
           </div>
         </form>
