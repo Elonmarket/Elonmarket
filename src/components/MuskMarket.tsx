@@ -15,13 +15,13 @@ const topPredictors = [
 ];
 
 export const Elonmarket = () => {
-  const { payoutStats } = usePlatformData();
+  const { payoutStats, walletConfig } = usePlatformData();
   const { data: onchain, loading, refetch } = useOnchainData();
   const { currentRound } = usePredictionRound();
 
   useEffect(() => {
     refetch();
-  }, [currentRound?.status, currentRound?.id]);
+  }, [currentRound?.status, currentRound?.id, walletConfig?.payout_percentage]);
 
   const vaultBalanceSOL = onchain?.vault.balance_sol ?? 0;
   const payoutBalanceSOL = onchain?.payout.balance_sol ?? 0;
