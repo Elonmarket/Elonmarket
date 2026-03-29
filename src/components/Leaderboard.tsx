@@ -86,9 +86,12 @@ export const Leaderboard = () => {
                 <>
                   <div className="divide-y divide-border/50">
                     {(showAllLeaderboard ? leaderboard : leaderboard.slice(0, 15)).map((entry) => (
-                      <div
+                      <a
                         key={entry.id}
-                        className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors ${
+                        href={`https://solscan.io/account/${entry.wallet_address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer ${
                           entry.rank <= 3 ? "bg-gradient-to-r from-neon-green/5 to-transparent" : ""
                         } ${entry.isYou ? "ring-1 ring-neon-cyan/30 bg-neon-cyan/5" : ""}`}
                       >
@@ -112,7 +115,7 @@ export const Leaderboard = () => {
                             {entry.total_wins} wins • {entry.win_rate.toFixed(1)}%
                           </p>
                         </div>
-                      </div>
+                      </a>
                     ))}
                   </div>
                   {leaderboard.length > 15 && (
