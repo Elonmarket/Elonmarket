@@ -194,7 +194,7 @@ export const Leaderboard = () => {
                               +{winner.amount.toFixed(4)} SOL
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {winner.tx_signature ? "View Tx on Solscan ↗" : "View on Solscan ↗"}
+                              {winner.tx_signature ? formatAddress(winner.tx_signature) : "Received"}
                             </p>
                           </div>
                         </a>
