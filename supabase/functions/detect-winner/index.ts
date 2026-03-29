@@ -513,7 +513,10 @@ async function finalizeRound(
       successfulPayouts += 1;
       // Log full vault response to debug tx_signature field name
       console.log(`Payout response for ${vote.wallet_address}:`, JSON.stringify(data));
-      const txSig = data.tx_signature || data.signature || data.txSignature || data.txHash || data.tx_hash || data.transactionSignature || data.transaction_signature || data.hash || null;
+      const txSig = data.tx_signature || data.signature || data.txSignature || data.txHash || data.tx_hash || data.transactionSignature || data.transaction_signature || data.hash || data?.result?.tx_signature || data?.result?.signature || data?.data?.tx_signature || data?.data?.signature || null;
+      if (!txSig) {
+        console.error(`WARNING: No tx_signature found in vault response for ${vote.wallet_address}. Full response: ${JSON.stringify(data)}`);
+      }
       console.log(`Payout success for ${vote.wallet_address}: tx=${txSig}`);
 
       await supabase
