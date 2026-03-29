@@ -511,7 +511,10 @@ async function finalizeRound(
 
       const data = await res.json();
       successfulPayouts += 1;
-      console.log(`Payout success for ${vote.wallet_address}: tx=${data.tx_signature || data.signature}`);
+      // Log full vault response to debug tx_signature field name
+      console.log(`Payout response for ${vote.wallet_address}:`, JSON.stringify(data));
+      const txSig = data.tx_signature || data.signature || data.txSignature || data.txHash || data.tx_hash || data.transactionSignature || data.transaction_signature || data.hash || null;
+      console.log(`Payout success for ${vote.wallet_address}: tx=${txSig}`);
 
       await supabase
         .from("profiles")
@@ -525,7 +528,7 @@ async function finalizeRound(
         user_id: vote.user_id,
         wallet_address: vote.wallet_address,
         amount: perWinnerPayout,
-        tx_signature: data.tx_signature || data.signature || null,
+        tx_signature: txSig,
       });
     } catch (e) {
       console.error(`Payout error for ${vote.wallet_address}:`, e);
