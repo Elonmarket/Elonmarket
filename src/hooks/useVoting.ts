@@ -4,15 +4,15 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function useVoting() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, sessionToken } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const submitVote = useCallback(
     async (roundId: string, optionId: string, tokenBalance: number) => {
-      if (!user) {
+      if (!user || !sessionToken) {
         toast({
           title: "Not logged in",
-          description: "Please log in with username & wallet to vote",
+          description: "Please log in with your username and password to vote",
           variant: "destructive",
         });
         return false;
@@ -28,6 +28,7 @@ export function useVoting() {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              "x-elonmarket-session": sessionToken ?? "",
             },
             body: JSON.stringify({
               walletAddress: user.wallet_address,
@@ -61,7 +62,7 @@ export function useVoting() {
         setLoading(false);
       }
     },
-    [user, toast]
+    [sessionToken, user, toast]
   );
 
   return { submitVote, loading };

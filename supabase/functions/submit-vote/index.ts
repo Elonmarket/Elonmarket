@@ -1,8 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { verifySessionToken } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-elonmarket-session",
 };
 
 // Verify token balance on-chain using Solana RPC
@@ -61,9 +62,10 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { walletAddress, roundId, optionId } = body;
+    const sessionToken = req.headers.get("x-elonmarket-session") || "";
 
-    if (!walletAddress || !roundId || !optionId) {
-      return new Response(JSON.stringify({ error: "Missing required fields: walletAddress, roundId, or optionId" }), {
+    if (!walletAddress || !roundId || !optionId || !sessionToken) {
+      return new Response(JSON.stringify({ error: "Missing required fields or session token." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -72,6 +74,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const session = await verifySessionToken(sessionToken);
+
+    if (!session || session.walletAddress !== walletAddress) {
+      return new Response(JSON.stringify({ error: "Unauthorized session." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Get wallet config for minimum token balance
     const { data: walletConfig, error: configError } = await supabase
@@ -146,10 +156,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get or create user profile
-    let { data: profile, error: profileGetError } = await supabase
+    // Resolve the authenticated user profile
+    const { data: profile, error: profileGetError } = await supabase
       .from("profiles")
       .select("id")
+      .eq("id", session.userId)
       .eq("wallet_address", walletAddress)
       .maybeSingle();
 
@@ -158,30 +169,10 @@ Deno.serve(async (req) => {
     }
 
     if (!profile) {
-      console.log(`Creating new profile for ${walletAddress}`);
-      const { data: newProfile, error: profileInsertError } = await supabase
-        .from("profiles")
-        .insert({
-          wallet_address: walletAddress,
-          display_name: `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`,
-        })
-        .select("id")
-        .single();
-
-      if (profileInsertError) {
-        throw new Error(`Profile creation failed: ${profileInsertError.message}`);
-      }
-      profile = newProfile;
-
-      // Add user role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: profile.id,
-        role: "user",
+      return new Response(JSON.stringify({ error: "Authenticated profile not found." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      
-      if (roleError) {
-        console.error("Warning: Could not assign user role:", roleError.message);
-      }
     }
 
     // Check if user already voted this round
@@ -253,9 +244,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ success: true, vote }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error submitting vote:", error);
-    const errorMessage = error.message || error.error_description || error.toString() || "Unknown error";
+    const errorMessage = error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "error_description" in error
+        ? String(error.error_description)
+        : String(error ?? "Unknown error");
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
