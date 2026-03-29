@@ -160,21 +160,18 @@ export const Leaderboard = () => {
                 <>
                   <div className="divide-y divide-border/50">
                     {(showAllWinners ? recentWinners : recentWinners.slice(0, 15)).map((winner) => {
-                      const WrapperEl = winner.tx_signature ? 'a' : 'div';
-                      const wrapperProps = winner.tx_signature
-                        ? {
-                            href: `https://solscan.io/tx/${winner.tx_signature}`,
-                            target: "_blank",
-                            rel: "noopener noreferrer",
-                          }
-                        : {};
+                      const solscanUrl = winner.tx_signature
+                        ? `https://solscan.io/tx/${winner.tx_signature}`
+                        : `https://solscan.io/account/${winner.wallet_address}`;
                       return (
-                        <WrapperEl
+                        <a
                           key={winner.id}
-                          {...wrapperProps}
-                          className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors ${
+                          href={solscanUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer ${
                             winner.isYou ? "ring-1 ring-neon-cyan/30 bg-neon-cyan/5" : ""
-                          } ${winner.tx_signature ? "cursor-pointer" : ""}`}
+                          }`}
                         >
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-green to-neon-cyan flex items-center justify-center">
@@ -194,10 +191,10 @@ export const Leaderboard = () => {
                               +{winner.amount.toFixed(4)} SOL
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {winner.tx_signature ? "View on Solscan ↗" : "Received"}
+                              {winner.tx_signature ? "View Tx on Solscan ↗" : "View on Solscan ↗"}
                             </p>
                           </div>
-                        </WrapperEl>
+                        </a>
                       );
                     })}
                   </div>
