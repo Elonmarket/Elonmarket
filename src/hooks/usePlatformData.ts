@@ -128,9 +128,19 @@ export function usePlatformData() {
       )
       .subscribe();
 
+    const walletConfigChannel = supabase
+      .channel("wallet_config_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wallet_config" },
+        () => fetchData()
+      )
+      .subscribe();
+
     return () => {
       statsChannel.unsubscribe();
       balancesChannel.unsubscribe();
+      walletConfigChannel.unsubscribe();
     };
   }, [fetchData]);
 
