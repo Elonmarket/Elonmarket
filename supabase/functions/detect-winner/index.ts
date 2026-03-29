@@ -525,6 +525,7 @@ async function finalizeRound(
         user_id: vote.user_id,
         wallet_address: vote.wallet_address,
         amount: perWinnerPayout,
+        tx_signature: data.tx_signature || data.signature || null,
       });
     } catch (e) {
       console.error(`Payout error for ${vote.wallet_address}:`, e);

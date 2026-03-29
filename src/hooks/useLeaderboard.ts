@@ -22,6 +22,7 @@ export interface RecentWinner {
   wallet_address: string;
   amount: number;
   created_at: string;
+  tx_signature?: string | null;
   isYou?: boolean;
 }
 

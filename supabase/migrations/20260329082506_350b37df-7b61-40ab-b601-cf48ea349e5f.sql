@@ -1,0 +1,1 @@
+ALTER TABLE public.recent_winners ADD COLUMN tx_signature text;

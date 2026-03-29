@@ -446,6 +446,7 @@ export type Database = {
           created_at: string
           id: string
           round_id: string
+          tx_signature: string | null
           user_id: string
           wallet_address: string
         }
@@ -454,6 +455,7 @@ export type Database = {
           created_at?: string
           id?: string
           round_id: string
+          tx_signature?: string | null
           user_id: string
           wallet_address: string
         }
@@ -462,6 +464,7 @@ export type Database = {
           created_at?: string
           id?: string
           round_id?: string
+          tx_signature?: string | null
           user_id?: string
           wallet_address?: string
         }

@@ -159,34 +159,47 @@ export const Leaderboard = () => {
               ) : (
                 <>
                   <div className="divide-y divide-border/50">
-                    {(showAllWinners ? recentWinners : recentWinners.slice(0, 15)).map((winner) => (
-                      <div
-                        key={winner.id}
-                        className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors ${
-                          winner.isYou ? "ring-1 ring-neon-cyan/30 bg-neon-cyan/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-green to-neon-cyan flex items-center justify-center">
-                            <Trophy className="w-5 h-5 text-background" />
+                    {(showAllWinners ? recentWinners : recentWinners.slice(0, 15)).map((winner) => {
+                      const WrapperEl = winner.tx_signature ? 'a' : 'div';
+                      const wrapperProps = winner.tx_signature
+                        ? {
+                            href: `https://solscan.io/tx/${winner.tx_signature}`,
+                            target: "_blank",
+                            rel: "noopener noreferrer",
+                          }
+                        : {};
+                      return (
+                        <WrapperEl
+                          key={winner.id}
+                          {...wrapperProps}
+                          className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors ${
+                            winner.isYou ? "ring-1 ring-neon-cyan/30 bg-neon-cyan/5" : ""
+                          } ${winner.tx_signature ? "cursor-pointer" : ""}`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-green to-neon-cyan flex items-center justify-center">
+                              <Trophy className="w-5 h-5 text-background" />
+                            </div>
+                            <div>
+                              <p className={`font-medium ${winner.isYou ? "text-neon-cyan" : "text-foreground"}`}>
+                                {winner.isYou ? "YOU" : formatAddress(winner.wallet_address)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(winner.created_at), { addSuffix: true })}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className={`font-medium ${winner.isYou ? "text-neon-cyan" : "text-foreground"}`}>
-                              {winner.isYou ? "YOU" : formatAddress(winner.wallet_address)}
+                          <div className="text-right">
+                            <p className="font-display font-bold text-neon-green">
+                              +{winner.amount.toFixed(4)} SOL
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(winner.created_at), { addSuffix: true })}
+                              {winner.tx_signature ? "View on Solscan ↗" : "Claimed"}
                             </p>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-display font-bold text-neon-green">
-                            +{winner.amount.toFixed(4)} SOL
-                          </p>
-                          <p className="text-xs text-muted-foreground">Claimed</p>
-                        </div>
-                      </div>
-                    ))}
+                        </WrapperEl>
+                      );
+                    })}
                   </div>
                   {recentWinners.length > 15 && (
                     <div className="p-4 flex flex-col items-center gap-2 border-t border-border/50 bg-muted/20">
