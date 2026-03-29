@@ -169,10 +169,12 @@ Deno.serve(async (req) => {
     const now = new Date();
     const endTime = new Date(openRound.end_time);
 
-    // Add a 2-minute buffer for clock skew between client and server
+    // Only finalize when end_time has truly passed.
+    // The cron skew buffer was removed because it caused the cron to lock
+    // and finalize rounds up to 2 minutes early — before tweets could arrive.
+    // Admin force_finalize still gets a small 30-second grace window.
     const isPastEndTime = now >= endTime;
-    const isWithinSkewBuffer = now.getTime() >= (endTime.getTime() - 120000);
-    const shouldFinalize = isPastEndTime || (forceFinalize && isWithinSkewBuffer) || (triggeredBy === "cron" && isWithinSkewBuffer);
+    const shouldFinalize = isPastEndTime || (forceFinalize && now.getTime() >= (endTime.getTime() - 30000));
 
     if (shouldFinalize) {
       console.log(`Finalizing round ${openRound.id}. Triggered by: ${triggeredBy}. Past end: ${isPastEndTime}. Force: ${forceFinalize}`);

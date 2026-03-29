@@ -39,9 +39,16 @@ export async function buildVaultHeaders(
   if (!apiKey) throw new Error("Missing vault API key");
   if (!hmacSecret) throw new Error("Missing VAULT_HMAC_SECRET");
 
+  // The vault server computes HMAC on the raw HTTP body bytes.
+  // For GET requests (no body), pass null so HMAC is computed on "".
+  // For POST requests, pass the payload so HMAC is computed on the JSON body.
+  // An empty object {} means "no meaningful payload" → treat as null for HMAC.
+  const isEmptyPayload = payload && Object.keys(payload).length === 0;
+  const hmacPayload = isEmptyPayload ? null : (payload ?? null);
+
   return {
     "Content-Type": "application/json",
     "x-api-key": apiKey,
-    "X-HMAC-SIGNATURE": await generateVaultHmac(hmacSecret, payload ?? null),
+    "X-HMAC-SIGNATURE": await generateVaultHmac(hmacSecret, hmacPayload),
   };
 }

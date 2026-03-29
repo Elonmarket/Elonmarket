@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "mcp__supabase_fiverr_client__execute_sql",
-      "mcp__supabase_fiverr_client__list_tables"
+      "mcp__supabase_fiverr_client__list_tables",
+      "mcp__supabase_fiverr_client__get_logs",
+      "WebFetch(domain:64.176.34.200)",
+      "mcp__supabase_fiverr_client__deploy_edge_function"
     ]
   }
 }
