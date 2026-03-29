@@ -17,41 +17,66 @@ interface UserProfile {
 
 interface AuthContextType {
   user: UserProfile | null;
+  sessionToken: string | null;
   loading: boolean;
   error: string | null;
-  register: (username: string, walletAddress: string) => Promise<boolean>;
-  login: (username: string, walletAddress: string) => Promise<boolean>;
+  register: (username: string, walletAddress: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean>;
+  resetPassword: (
+    username: string,
+    walletAddress: string,
+    password: string,
+    challengeToken: string,
+    signature: string
+  ) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "elonmarket_user";
+const SESSION_STORAGE_KEY = "elonmarket_session";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    const storedSession = localStorage.getItem(SESSION_STORAGE_KEY);
+
+    if (!stored || !storedSession) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      setLoading(false);
+      return;
+    }
+
     if (stored) {
       try {
         setUser(JSON.parse(stored));
       } catch {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
       }
+    }
+    if (storedSession) {
+      setSessionToken(storedSession);
     }
     setLoading(false);
   }, []);
 
-  const saveUser = (profile: UserProfile) => {
+  const saveUser = (profile: UserProfile, token: string) => {
     setUser(profile);
+    setSessionToken(token);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+    localStorage.setItem(SESSION_STORAGE_KEY, token);
   };
 
   const register = useCallback(
-    async (username: string, walletAddress: string) => {
+    async (username: string, walletAddress: string, password: string) => {
       setError(null);
       try {
         const res = await fetch(
@@ -66,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               action: "register",
               username,
               walletAddress,
+              password,
             }),
           }
         );
@@ -76,8 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return false;
         }
 
-        if (data.user) {
-          saveUser(data.user as UserProfile);
+        if (data.user && data.sessionToken) {
+          saveUser(data.user as UserProfile, data.sessionToken as string);
           return true;
         }
 
@@ -92,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const login = useCallback(
-    async (username: string, walletAddress: string) => {
+    async (username: string, password: string) => {
       setError(null);
       try {
         const res = await fetch(
@@ -106,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             body: JSON.stringify({
               action: "login",
               username,
-              walletAddress,
+              password,
             }),
           }
         );
@@ -117,8 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return false;
         }
 
-        if (data.user) {
-          saveUser(data.user as UserProfile);
+        if (data.user && data.sessionToken) {
+          saveUser(data.user as UserProfile, data.sessionToken as string);
           return true;
         }
 
@@ -132,19 +158,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  const resetPassword = useCallback(
+    async (
+      username: string,
+      walletAddress: string,
+      password: string,
+      challengeToken: string,
+      signature: string
+    ) => {
+      setError(null);
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-register`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              action: "reset-password",
+              username,
+              walletAddress,
+              password,
+              challengeToken,
+              signature,
+            }),
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error ?? "Password reset failed.");
+          return false;
+        }
+
+        if (data.user && data.sessionToken) {
+          saveUser(data.user as UserProfile, data.sessionToken as string);
+          return true;
+        }
+
+        setError("Password reset failed.");
+        return false;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Password reset failed.");
+        return false;
+      }
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     setUser(null);
+    setSessionToken(null);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        sessionToken,
         loading,
         error,
         register,
         login,
+        resetPassword,
         logout,
       }}
     >
@@ -160,4 +240,3 @@ export const useAuth = (): AuthContextType => {
   }
   return ctx;
 };
-
