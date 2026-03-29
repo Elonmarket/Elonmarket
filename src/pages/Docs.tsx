@@ -17,7 +17,7 @@ const SECTIONS = [
     { id: "options", label: "Prediction Options" },
   ]},
   { id: "tech", label: "Technical Engine", icon: Cpu, sub: [
-    { id: "monitoring", label: "Post Monitoring" },
+    { id: "monitoring", label: "Post Monitoring Structure" },
     { id: "streaming", label: "Live Streaming" },
     { id: "resolution", label: "Winner Resolution" },
   ]},
