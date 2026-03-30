@@ -158,6 +158,7 @@ async function poll() {
         const preview = quotedTweetText ? `${mainText.slice(0, 40)}... [+quote]` : mainText.slice(0, 80);
         console.log("Tweet sent to Supabase:", preview);
         trackText(mainText);
+      }
 
       lastTweetId = guid;
     }
