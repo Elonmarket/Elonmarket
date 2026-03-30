@@ -169,8 +169,8 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     return () => clearInterval(interval);
   }, [postDate.getTime()]);
 
-  // Detect if it's a pure repost based on poller logic
-  const isRepost = tweet.text.toLowerCase().startsWith("rt by @");
+  // Detect if it's a pure repost based on tweet_type or text prefix
+  const isRepost = tweet.tweet_type === "repost" || tweet.text.toLowerCase().startsWith("rt by @");
   const isQuote = tweet.tweet_type === "quote" && !isRepost;
 
   // Preserve @mentions (e.g. @Tesla, @SpaceX) - only collapse extra spaces

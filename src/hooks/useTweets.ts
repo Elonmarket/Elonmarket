@@ -14,7 +14,7 @@ export interface Tweet {
   author_username: string;
   author_name?: string;
   author_avatar?: string;
-  tweet_type: "post" | "quote";
+  tweet_type: "post" | "quote" | "repost";
   quoted_tweet_id?: string;
   quoted_tweet_text?: string;
   matched_option_id?: string;

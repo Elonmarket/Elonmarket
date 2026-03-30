@@ -34,6 +34,30 @@ console.log("Using PROFILE_USERNAME:", PROFILE_USERNAME);
 
 let lastTweetId = null;
 
+// Buffer of recent tweet texts (stripped of RT prefix) to deduplicate reposts
+const recentTexts = [];
+const MAX_RECENT_TEXTS = 50;
+
+/** Strip the "RT by @username: " prefix from tweet text for dedup comparison. */
+function stripRtPrefix(text) {
+  return (text || "").replace(/^RT by\s+@\w+:\s*/i, "").trim().toLowerCase();
+}
+
+/** Check if text is a duplicate of a recently sent tweet. */
+function isDuplicateText(text) {
+  const stripped = stripRtPrefix(text);
+  if (!stripped) return false;
+  return recentTexts.includes(stripped);
+}
+
+/** Track a sent tweet's text for future dedup. */
+function trackText(text) {
+  const stripped = stripRtPrefix(text);
+  if (!stripped || recentTexts.includes(stripped)) return;
+  recentTexts.push(stripped);
+  if (recentTexts.length > MAX_RECENT_TEXTS) recentTexts.shift();
+}
+
 /** Strip HTML tags from a string. */
 function stripHtml(html) {
   if (!html || typeof html !== "string") return "";
@@ -99,6 +123,14 @@ async function poll() {
         continue;
       }
 
+      // Deduplicate: if the core text (stripped of RT prefix) was already sent, skip
+      if (isDuplicateText(title)) {
+        console.log("Skipping duplicate repost:", title.slice(0, 80));
+        lastTweetId = guid;
+        continue;
+      }
+
+      const isRt = /^RT by\s+@/i.test(title);
       const { mainText, quotedTweetText } = parseQuoteFromDescription(title, description);
       const body = {
         text: mainText,
@@ -106,7 +138,7 @@ async function poll() {
         created_at: pubDate,
         user_name: USER_DISPLAY_NAME,
         author_username: PROFILE_USERNAME,
-        tweet_type: quotedTweetText ? "quote" : "post",
+        tweet_type: isRt ? "repost" : (quotedTweetText ? "quote" : "post"),
       };
       if (quotedTweetText) body.quoted_tweet_text = quotedTweetText;
 
@@ -125,6 +157,7 @@ async function poll() {
       } else {
         const preview = quotedTweetText ? `${mainText.slice(0, 40)}... [+quote]` : mainText.slice(0, 80);
         console.log("Tweet sent to Supabase:", preview);
+        trackText(mainText);
       }
 
       lastTweetId = guid;
