@@ -356,7 +356,7 @@ const Docs = () => {
               <div id="funding" className="mb-12 scroll-mt-28">
                 <h3 className="text-xl font-bold mb-4">Vault Funding (Creator Rewards)</h3>
                 <p className="text-muted-foreground mb-6">
-                  The reward pool is funded entirely by <strong>Creator Rewards</strong> generated from pump.fun. A scheduled bot transfers these funds to the vault every 10 minutes.
+                  The reward pool is funded entirely by <strong>Creator Rewards</strong> generated from pump.fun. A scheduled bot transfers these funds to the vault every 20 minutes.
                 </p>
                 <div className="flex items-center gap-6 p-4 rounded-2xl bg-muted/20 border border-border/50 border-dashed">
                   <div className="flex flex-col items-center">
