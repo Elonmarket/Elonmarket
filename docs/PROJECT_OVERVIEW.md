@@ -42,7 +42,7 @@ Elonmarket operates on an "auto-payout" model, eliminating the need for user-tri
 ## 💰 Economic Model (Creator Rewards)
 
 The reward pool is sustainably funded by **Creator Rewards** from pump.fun.
-- **Auto-Funding Bot:** Runs every 10 minutes to withdraw rewards from the source and fund the Elonmarket vault.
+- **Auto-Funding Bot:** Runs every 20 minutes to withdraw rewards from the source and fund the Elonmarket vault.
 - **Distribution Rule:** A configurable percentage (default 15%) of the **current** vault balance is distributed as rewards for each successful round.
 
 ---

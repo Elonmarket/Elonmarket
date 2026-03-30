@@ -356,7 +356,7 @@ const Docs = () => {
               <div id="funding" className="mb-12 scroll-mt-28">
                 <h3 className="text-xl font-bold mb-4">Vault Funding (Creator Rewards)</h3>
                 <p className="text-muted-foreground mb-6">
-                  The reward pool is funded entirely by <strong>Creator Rewards</strong> generated from pump.fun. A scheduled bot transfers these funds to the vault every 10 minutes.
+                  The reward pool is funded entirely by <strong>Creator Rewards</strong> generated from pump.fun. A scheduled bot transfers these funds to the vault every 20 minutes.
                 </p>
                 <div className="flex items-center gap-6 p-4 rounded-2xl bg-muted/20 border border-border/50 border-dashed">
                   <div className="flex flex-col items-center">
@@ -370,7 +370,7 @@ const Docs = () => {
                     <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden mb-1">
                       <div className="h-full bg-neon-cyan w-3/4 animate-pulse" />
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Every 10 Minutes</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Every 20 Minutes</span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-muted-foreground opacity-30" />
                   <div className="flex flex-col items-center">
