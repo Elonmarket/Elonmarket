@@ -1,15 +1,3 @@
 {
-  "mcpServers": {
-    "supabase_fiverr_client": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=xzswyicqxtocruvjyqlf",
-      "headers": {
-        "Authorization": "Bearer sbp_b2b3e115be26e648371c56214adf8bd32d140aae"
-      }
-    },
-    "context7": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"]
-    }
-  }
+  "mcpServers": {}
 }
