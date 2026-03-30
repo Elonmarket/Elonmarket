@@ -320,8 +320,8 @@ export const PredictionVoting = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">Your prediction has been recorded</p>
                     </div>
                   ) : isVoteLocked ? (
-                    <div className="text-center p-3 rounded-lg bg-neon-orange/10 border border-neon-orange/30">
-                      <Lock className="w-5 h-5 text-neon-orange mx-auto mb-1.5" />
+                    <div className="text-center p-2.5 rounded-lg bg-neon-orange/10 border border-neon-orange/30">
+                      <Lock className="w-4 h-4 text-neon-orange mx-auto mb-1" />
                       <p className="text-neon-orange font-medium">Voting Locked</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Prediction monitoring {voteLockRemaining === "Monitoring..." ? "is active" : `starts in ${voteLockRemaining}`}
