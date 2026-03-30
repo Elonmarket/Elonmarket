@@ -233,7 +233,7 @@ export const PredictionVoting = () => {
                 )}
 
                 {/* Options Grid */}
-                <div className="space-y-3 mb-6">
+                <div className="space-y-2 mb-4">
                   {options.map((option) => {
                     const percentage = totalVotes > 0 ? (option.vote_count / totalVotes) * 100 : 0;
                     const isSelected = selectedOption === option.id;
