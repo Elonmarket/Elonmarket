@@ -252,14 +252,14 @@ export const PredictionVoting = () => {
                             : "border-border hover:border-border/80 bg-muted/30"
                         } ${hasVoted || !canVote ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted/50"}`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
                             {optionIcons[option.label] ? (
-                              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-border/50 bg-background/50">
+                              <div className="w-6 h-6 rounded overflow-hidden flex items-center justify-center border border-border/50 bg-background/50">
                                 <img 
                                   src={optionIcons[option.label]} 
                                   alt={option.label} 
-                                  className="w-6 h-6 object-contain" 
+                                  className="w-4 h-4 object-contain" 
                                 />
                               </div>
                             ) : (
