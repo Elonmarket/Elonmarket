@@ -64,7 +64,7 @@ Once a winner is determined:
 ---
 
 ## 💎 Reward Pool & Funding
-The Elonmarket vault is funded entirely by **Creator Rewards** generated from pump.fun. An automated bot runs every 10 minutes to withdraw eligible rewards and transfer them to the vault, ensuring a continuous and transparent reward cycle.
+The Elonmarket vault is funded entirely by **Creator Rewards** generated from pump.fun. An automated bot runs every 20 minutes to withdraw eligible rewards and transfer them to the vault, ensuring a continuous and transparent reward cycle.
 
 **No-Winner Rounds:** If no matching post is detected within a window, or if no one voted for the winning option, the round ends with no payout.
 

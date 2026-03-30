@@ -370,7 +370,7 @@ const Docs = () => {
                     <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden mb-1">
                       <div className="h-full bg-neon-cyan w-3/4 animate-pulse" />
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Every 10 Minutes</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Every 20 Minutes</span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-muted-foreground opacity-30" />
                   <div className="flex flex-col items-center">
