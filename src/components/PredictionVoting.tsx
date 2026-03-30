@@ -288,7 +288,7 @@ export const PredictionVoting = () => {
                           />
                         </div>
 
-                        <p className="text-xs text-muted-foreground mt-1.5">{option.vote_count} votes</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{option.vote_count} votes</p>
                       </button>
                     );
                   })}
