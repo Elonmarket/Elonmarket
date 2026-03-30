@@ -150,14 +150,14 @@ export const PredictionVoting = () => {
   const canVote = isRoundOpen && !isVoteLocked;
 
   return (
-    <section id="predict" className="py-12 relative">
+    <section id="predict" className="py-8 relative">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="mb-6">
-          <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-1">
+        <div className="mb-4">
+          <h2 className="font-display text-lg md:text-xl font-semibold text-foreground mb-0.5">
             Markets
           </h2>
-          <p className="font-display text-xl mt-2 flex flex-col items-center gap-1 md:text-2xl font-semibold text-muted-foreground mb-1">
+          <p className="font-display text-base mt-1 flex flex-col items-center gap-1 md:text-lg font-semibold text-muted-foreground mb-0.5">
             {currentRound?.question || "What will Elon tweet about next?"}
           </p>
           {currentRound?.prediction_start_time && currentRound?.end_time && (
@@ -218,11 +218,11 @@ export const PredictionVoting = () => {
                 </div>
               </CardHeader>
 
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 {/* Prediction time frame info */}
                 {currentRound?.prediction_start_time && isRoundOpen && (
-                  <div className={`mb-4 p-2.5 rounded-lg border ${isVoteLocked ? "bg-neon-orange/5 border-neon-orange/30" : "bg-neon-green/5 border-neon-green/30"}`}>
-                    <p className="text-xs">
+                  <div className={`mb-3 p-2 rounded-lg border ${isVoteLocked ? "bg-neon-orange/5 border-neon-orange/30" : "bg-neon-green/5 border-neon-green/30"}`}>
+                    <p className="text-[11px]">
                       {isVoteLocked ? (
                         <span className="text-neon-orange">🔒 Votes locked. Prediction monitoring {voteLockRemaining === "Monitoring..." ? "is active" : `starts in ${voteLockRemaining}`}.</span>
                       ) : (
@@ -233,7 +233,7 @@ export const PredictionVoting = () => {
                 )}
 
                 {/* Options Grid */}
-                <div className="space-y-3 mb-6">
+                <div className="space-y-2 mb-4">
                   {options.map((option) => {
                     const percentage = totalVotes > 0 ? (option.vote_count / totalVotes) * 100 : 0;
                     const isSelected = selectedOption === option.id;
@@ -244,7 +244,7 @@ export const PredictionVoting = () => {
                         key={option.id}
                         onClick={() => !hasVoted && canVote && setSelectedOption(option.id)}
                         disabled={hasVoted || !canVote}
-                        className={`relative w-full p-3.5 rounded-lg border transition-all duration-200 text-left ${
+                        className={`relative w-full p-2.5 rounded-lg border transition-all duration-200 text-left ${
                           isWinner
                             ? "border-neon-green bg-neon-green/5"
                             : isSelected
@@ -252,14 +252,14 @@ export const PredictionVoting = () => {
                             : "border-border hover:border-border/80 bg-muted/30"
                         } ${hasVoted || !canVote ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted/50"}`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
                             {optionIcons[option.label] ? (
-                              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-border/50 bg-background/50">
+                              <div className="w-6 h-6 rounded overflow-hidden flex items-center justify-center border border-border/50 bg-background/50">
                                 <img 
                                   src={optionIcons[option.label]} 
                                   alt={option.label} 
-                                  className="w-6 h-6 object-contain" 
+                                  className="w-4 h-4 object-contain" 
                                 />
                               </div>
                             ) : (
@@ -281,21 +281,21 @@ export const PredictionVoting = () => {
                           </div>
                         </div>
 
-                        <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="relative h-1 bg-muted rounded-full overflow-hidden">
                           <div 
                             className={`absolute inset-y-0 left-0 ${optionColors[option.label] || 'bg-primary'} rounded-full transition-all duration-300`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
 
-                        <p className="text-xs text-muted-foreground mt-1.5">{option.vote_count} votes</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{option.vote_count} votes</p>
                       </button>
                     );
                   })}
                 </div>
 
                 {/* Vote Button */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {!user ? (
                     <Button variant="neon" className="w-full" onClick={() => setAuthModalOpen(true)}>
                       <UserIcon className="w-3.5 h-3.5 mr-2" />
@@ -306,22 +306,22 @@ export const PredictionVoting = () => {
                       Verifying token balance...
                     </Button>
                   ) : !balance?.isEligible ? (
-                    <div className="text-center p-3 rounded-lg bg-destructive/10 border border-destructive/30">
-                      <AlertCircle className="w-5 h-5 text-destructive mx-auto mb-1.5" />
+                    <div className="text-center p-2.5 rounded-lg bg-destructive/10 border border-destructive/30">
+                      <AlertCircle className="w-4 h-4 text-destructive mx-auto mb-1" />
                       <p className="text-destructive font-medium">Insufficient token balance</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         You need at least {walletConfig?.min_token_balance || 1} tokens to participate
                       </p>
                     </div>
                   ) : hasVoted ? (
-                    <div className="text-center p-3 rounded-lg bg-neon-green/10 border border-neon-green/30">
-                      <CheckCircle className="w-5 h-5 text-neon-green mx-auto mb-1.5" />
+                    <div className="text-center p-2.5 rounded-lg bg-neon-green/10 border border-neon-green/30">
+                      <CheckCircle className="w-4 h-4 text-neon-green mx-auto mb-1" />
                       <p className="text-neon-green font-medium">Vote submitted!</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Your prediction has been recorded</p>
                     </div>
                   ) : isVoteLocked ? (
-                    <div className="text-center p-3 rounded-lg bg-neon-orange/10 border border-neon-orange/30">
-                      <Lock className="w-5 h-5 text-neon-orange mx-auto mb-1.5" />
+                    <div className="text-center p-2.5 rounded-lg bg-neon-orange/10 border border-neon-orange/30">
+                      <Lock className="w-4 h-4 text-neon-orange mx-auto mb-1" />
                       <p className="text-neon-orange font-medium">Voting Locked</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Prediction monitoring {voteLockRemaining === "Monitoring..." ? "is active" : `starts in ${voteLockRemaining}`}
