@@ -102,67 +102,50 @@ export const PollerTerminal = () => {
       <div className="max-w-6xl mx-auto">
         <Card variant="glass" className="overflow-hidden border border-neon-green/20">
           {/* Terminal header */}
-          <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-black/60 border-b border-neon-green/10">
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <div className="flex gap-1 sm:gap-1.5 shrink-0">
-                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500/80" />
-                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-500/80" />
-                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500/80" />
+          <div className="flex items-center justify-between px-3 py-2 bg-black/60 border-b border-neon-green/10">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex gap-1 shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
               </div>
-              <Terminal className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neon-green/70 ml-1 sm:ml-2 shrink-0" />
-              <span className="text-[10px] sm:text-xs font-mono text-neon-green/70 tracking-wide truncate">
-                elonmarket_terminal
+              <span className="text-[10px] sm:text-xs font-mono text-muted-foreground ml-2 truncate">
+                elonmarket — poller — live
               </span>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               {connected ? (
-                <div className="flex items-center gap-1">
-                  <Wifi className="w-3 h-3 text-neon-green" />
-                  <span className="text-[9px] sm:text-[10px] font-mono text-neon-green uppercase tracking-widest">
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green" />
+                  </span>
+                  <span className="text-[10px] font-mono text-neon-green uppercase tracking-wider">
                     Live
                   </span>
-                  <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-neon-green" />
-                  </span>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center gap-1">
+                <>
                   <WifiOff className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
                     Connecting
                   </span>
-                </div>
+                </>
               )}
-            </div>
-          </div>
-
-          {/* Terminal description */}
-          <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-black/40 border-b border-neon-green/5">
-            <div className="flex items-start gap-1.5 sm:gap-2">
-              <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neon-green/50 shrink-0 mt-0.5" />
-              <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground leading-tight">
-                <span className="text-neon-green/70">Elonmarket Terminal</span>
-                {" — "}
-                Monitoring Elon Musk's X activity live.
-              </p>
             </div>
           </div>
 
           {/* Log output */}
           <div
             ref={scrollRef}
-            className="h-[200px] sm:h-[240px] overflow-y-auto bg-black/80 px-2 sm:px-4 py-2 sm:py-3 font-mono text-[10px] sm:text-xs leading-relaxed custom-scrollbar"
+            className="h-[220px] sm:h-[260px] overflow-y-auto bg-black/90 px-3 py-2 font-mono text-[11px] sm:text-xs leading-[1.6] custom-scrollbar"
           >
             {logs.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <Terminal className="w-6 h-6 sm:w-8 sm:h-8 text-neon-green/20 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-[10px] sm:text-[11px]">
+                  <Terminal className="w-6 h-6 text-neon-green/20 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-[11px]">
                     Waiting for poller activity...
-                  </p>
-                  <p className="text-muted-foreground/50 text-[9px] sm:text-[10px] mt-1">
-                    Logs will appear here in real time
                   </p>
                 </div>
               </div>
@@ -171,21 +154,18 @@ export const PollerTerminal = () => {
                 {logs.map((log) => (
                   <motion.div
                     key={log.id}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-start gap-1 sm:gap-2 py-0.5 hover:bg-white/[0.02] rounded px-0.5 sm:px-1 -mx-0.5 sm:-mx-1"
+                    transition={{ duration: 0.15 }}
+                    className="whitespace-pre-wrap break-words py-[1px]"
                   >
-                    <span className="text-muted-foreground/50 shrink-0 select-none text-[9px] sm:text-xs">
-                      {formatTime(log.created_at)}
-                    </span>
-                    <span className="shrink-0 select-none w-3 sm:w-4 text-center text-[10px] sm:text-xs">
-                      {levelIcons[log.level] || "•"}
-                    </span>
-                    <span className={`shrink-0 uppercase text-[8px] sm:text-[10px] w-10 sm:w-14 pt-px ${levelColors[log.level] || "text-foreground"}`}>
-                      [{log.level}]
-                    </span>
-                    <span className="text-foreground/80 break-all min-w-0">
+                    <span className="text-muted-foreground/40 select-none">
+                      [{formatTime(log.created_at)}]
+                    </span>{" "}
+                    <span className={`font-bold uppercase ${levelColors[log.level] || "text-foreground"}`}>
+                      {log.level}
+                    </span>{" "}
+                    <span className="text-foreground/70">
                       {log.message}
                     </span>
                   </motion.div>
@@ -201,11 +181,11 @@ export const PollerTerminal = () => {
           </div>
 
           {/* Footer */}
-          <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-black/60 border-t border-neon-green/10 flex items-center justify-between">
-            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/50">
-              nitter-poller v1.0 • 10s
+          <div className="px-3 py-1 bg-black/60 border-t border-neon-green/10 flex items-center justify-between">
+            <span className="text-[9px] font-mono text-muted-foreground/40">
+              nitter-poller v1.0 • 10s interval
             </span>
-            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/50">
+            <span className="text-[9px] font-mono text-muted-foreground/40">
               {logs.length} entries
             </span>
           </div>
