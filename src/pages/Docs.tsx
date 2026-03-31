@@ -199,7 +199,7 @@ const Docs = () => {
                   { title: "Predict Elon’s X post", desc: "Stake your reputation on Elon's next move.", icon: Zap },
                   { title: "Win SOL automatically", desc: "No manual claims. Instant distribution.", icon: Trophy },
                   { title: "No wallet connection", desc: "Participation based on registration, not signatures.", icon: Lock },
-                  { title: "Real-time streaming", desc: "Watch posts appear as they happen via WebSocket.", icon: Activity },
+                  { title: "Real-time streaming", desc: "Watch Elon posts appears 24/7 live streaming.", icon: Activity },
                   { title: "Automated reward engine", desc: "Proprietary resolution engine for 100% accuracy.", icon: Cpu },
                   { title: "Global leaderboard", desc: "Competing with the world's best predictors.", icon: BarChart3 },
                 ].map((f, i) => (
