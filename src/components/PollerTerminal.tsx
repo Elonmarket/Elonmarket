@@ -15,7 +15,7 @@ interface PollerLog {
 const levelColors: Record<string, string> = {
   info: "text-neon-green",
   poll: "text-cyan-400",
-  tweet: "text-yellow-400",
+  tweet: "text-neon-green",
   repost: "text-purple-400",
   quote: "text-pink-400",
   error: "text-red-400",
