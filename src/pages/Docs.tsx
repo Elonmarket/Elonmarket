@@ -162,9 +162,17 @@ const Docs = () => {
             <section id="mission" className="mb-20 scroll-mt-28">
               <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 mb-4 px-3">OVERVIEW</Badge>
               <h1 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Project Mission</h1>
-              <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-                🚀 <span className="text-foreground font-bold">Elonmarket</span> is a decentralized, free-to-play prediction marketplace where users predict what Elon Musk will post first next on X.
-              </p>
+              <div className="text-xl text-muted-foreground leading-relaxed mb-8 space-y-4">
+                <p>
+                  <span className="text-foreground font-bold">ElonMarket</span> is a decentralized, free-to-play prediction market where people predict what Elon Musk will post first on X among the prediction options available.
+                </p>
+                <p>
+                  The game works by letting players vote on different topic options for Elon's post for example Grok, Starlink, Tesla, or X. Each round collects votes from the community on which topic they believe Elon will post about first among the topics.
+                </p>
+                <p>
+                  Once Elon makes a new post, the system automatically scans it. The first option that matches the detected topic of the post becomes the winning choice, and everyone who voted for that option wins the round. Winners automatically receive SOL rewards directly in their wallets—no manual claims, no gas interactions, and no complex wallet connections.
+                </p>
+              </div>
               <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-none">
                 <p>
                   Our goal is to build the world's first frictionless prediction ecosystem focused on real-world behavioral patterns. Elonmarket eliminates the typical barriers of entry into prediction markets by automating the entire lifecycle—from account creation to reward distribution.
