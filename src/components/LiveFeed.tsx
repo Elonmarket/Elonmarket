@@ -129,8 +129,8 @@ function highlightMatchesInText(text: string, options: string[]): React.ReactNod
 // so account display names (e.g. "Tesla") don't cause false keyword matches
 const stripAttributionPatterns = (text: string): string => {
   let cleaned = text;
-  // Remove "RT by @username:" prefix
-  cleaned = cleaned.replace(/^RT by @\S+:\s*/i, "");
+  // Remove "RT by @username:" or "RT @username:" prefix
+  cleaned = cleaned.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "");
   // Remove "DisplayName (@username)" patterns (e.g. "Tesla Motors (@tesla)")
   cleaned = cleaned.replace(/\b[\w\s]+\(@\w+\)/g, "");
   return cleaned;
