@@ -152,8 +152,8 @@ Deno.serve(async (req) => {
       author_name: userName,
       author_avatar: ELON_AVATAR,
       tweet_type: tweetType,
-      quoted_tweet_id: tweetType === "quote" ? quotedTweetId : null,
-      quoted_tweet_text: tweetType === "quote" ? quotedTweetText : null,
+      quoted_tweet_id: (tweetType === "quote" || tweetType === "repost") ? quotedTweetId : null,
+      quoted_tweet_text: (tweetType === "quote" || tweetType === "repost") ? quotedTweetText : null,
       created_at_twitter: parsedDate,
       fetched_at: new Date().toISOString(),
     };
