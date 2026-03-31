@@ -174,6 +174,7 @@ const Docs = () => {
                 </p>
               </div>
               <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-none">
+                <h2 className="text-2xl font-display font-bold text-foreground mb-4">OUR GOAL</h2>
                 <p>
                   Our goal is to build the world's first frictionless prediction ecosystem focused on real-world behavioral patterns. Elonmarket eliminates the typical barriers of entry into prediction markets by automating the entire lifecycle—from account creation to reward distribution.
                 </p>
