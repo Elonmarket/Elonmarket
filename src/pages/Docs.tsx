@@ -161,7 +161,7 @@ const Docs = () => {
             {/* Mission Section */}
             <section id="mission" className="mb-20 scroll-mt-28">
               <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 mb-4 px-3">OVERVIEW</Badge>
-              <h1 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Project Mission</h1>
+              <h1 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Overview</h1>
               <div className="text-xl text-muted-foreground leading-relaxed mb-8 space-y-4">
                 <p>
                   <span className="text-foreground font-bold">ElonMarket</span> is a decentralized, free-to-play prediction market where people predict what Elon Musk will post first on X among the prediction options available.
