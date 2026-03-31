@@ -135,6 +135,13 @@ export const PollerTerminal = () => {
             </div>
           </div>
 
+          {/* Explainer */}
+          <div className="px-3 py-2 bg-black/40 border-b border-neon-green/5">
+            <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/70 leading-relaxed">
+              <span className="text-neon-green/80">⚡ Elonmarket Terminal</span> — Monitoring Elon Musk's activities on X. Every post, every repost, every reply and every quoted repost — live streaming 24/7.
+            </p>
+          </div>
+
           {/* Log output */}
           <div
             ref={scrollRef}
