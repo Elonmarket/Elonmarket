@@ -8,7 +8,7 @@ interface PollerLog {
   id: string;
   level: string;
   message: string;
-  metadata: Record<string, unknown> | null;
+  metadata: unknown;
   created_at: string;
 }
 
