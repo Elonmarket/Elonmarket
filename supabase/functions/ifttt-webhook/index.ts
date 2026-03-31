@@ -57,6 +57,11 @@ Deno.serve(async (req) => {
     const tweetTypeRaw: string = body.tweet_type || "post";
     const quotedTweetId: string | null = body.quoted_tweet_id || null;
     const quotedTweetText: string | null = body.quoted_tweet_text || null;
+    const quotedTweetAuthorName: string | null = body.quoted_author_name || body.quoted_tweet_author_name || null;
+    const quotedTweetAuthorUsername: string | null = body.quoted_author_username || body.quoted_tweet_author_username || null;
+    const quotedTweetAuthorAvatar: string | null = body.quoted_author_avatar || body.quoted_tweet_author_avatar || null;
+    const mediaUrl: string | null = body.media_url || null;
+    const mediaType: string | null = body.media_type || "image";
 
     if (!tweetText) {
       return new Response(
@@ -158,6 +163,11 @@ Deno.serve(async (req) => {
       tweet_type: tweetType,
       quoted_tweet_id: (tweetType === "quote" || tweetType === "repost") ? quotedTweetId : null,
       quoted_tweet_text: (tweetType === "quote" || tweetType === "repost") ? quotedTweetText : null,
+      quoted_tweet_author_name: (tweetType === "quote" || tweetType === "repost") ? quotedTweetAuthorName : null,
+      quoted_tweet_author_username: (tweetType === "quote" || tweetType === "repost") ? quotedTweetAuthorUsername : null,
+      quoted_tweet_author_avatar: (tweetType === "quote" || tweetType === "repost") ? quotedTweetAuthorAvatar : null,
+      media_url: mediaUrl,
+      media_type: mediaType,
       created_at_twitter: parsedDate,
       fetched_at: new Date().toISOString(),
     };

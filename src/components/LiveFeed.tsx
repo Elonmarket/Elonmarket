@@ -173,10 +173,22 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
   const isRepost = tweet.tweet_type === "repost" || /^RT\s+(by\s+)?@/i.test(tweet.text);
   const isQuote = tweet.tweet_type === "quote" && !isRepost;
 
+  // Extract author info if we don't have it structured yet
+  // This helps for older tweets or if poller extraction fails
+  const authorPattern = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
+  const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
+  const authorMatch = !tweet.quoted_tweet_author_username ? rawTextForRepost.match(authorPattern) : null;
+  
+  const originalAuthor = {
+    name: tweet.quoted_tweet_author_name || (authorMatch ? authorMatch[1].trim() : null),
+    username: tweet.quoted_tweet_author_username || (authorMatch ? authorMatch[2].trim().replace("@", "") : null),
+    avatar: tweet.quoted_tweet_author_avatar || null
+  };
+
   // For reposts without quoted_tweet_text, extract the reposted content from main text
   const repostContent = isRepost && !tweet.quoted_tweet_text
-    ? tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim()
-    : null;
+    ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
+    : tweet.quoted_tweet_text;
 
   // Preserve @mentions (e.g. @Tesla, @SpaceX) - only collapse extra spaces
   const cleanText = tweet.text.replace(/\s{2,}/g, " ").trim();
@@ -241,17 +253,58 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
             )}
 
             {/* Quoted/Reposted Content */}
-            {(tweet.quoted_tweet_text || repostContent) && (
-              <div className={`mt-3 p-3 rounded-xl border border-border/50 bg-muted/20 relative group overflow-hidden flex-1 flex flex-col justify-center min-h-[60px] ${isRepost ? 'border-neon-green/20 bg-neon-green/5' : ''}`}>
+            {repostContent && (
+              <div 
+                className={`mt-3 p-3 rounded-xl border border-border/50 bg-muted/20 relative group overflow-hidden flex-1 flex flex-col justify-center min-h-[60px] ${isRepost ? 'border-neon-green/20 bg-neon-green/5' : ''}`}
+                onClick={(e) => {
+                  if (tweet.quoted_tweet_id && (originalAuthor.username || tweet.quoted_tweet_author_username)) {
+                    e.stopPropagation();
+                    const username = originalAuthor.username || tweet.quoted_tweet_author_username;
+                    window.open(`https://x.com/${username}/status/${tweet.quoted_tweet_id}`, "_blank", "noopener,noreferrer");
+                  }
+                }}
+              >
                 {isQuote && <Quote className="absolute -top-1 -right-1 w-8 h-8 text-foreground/5 pointer-events-none" />}
-                {isRepost && (
-                  <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1.5 font-bold opacity-60">
-                    Original Post
+                
+                {/* Original Author Header for Reposts/Quotes */}
+                {originalAuthor.username && (
+                  <div className="flex items-center gap-2 mb-2">
+                    {originalAuthor.avatar ? (
+                      <img 
+                        src={originalAuthor.avatar} 
+                        alt={originalAuthor.username} 
+                        className="w-5 h-5 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Repeat2 className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      <span className="text-xs font-bold text-foreground truncate max-w-[120px]">
+                        {originalAuthor.name || originalAuthor.username}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground truncate">
+                        @{originalAuthor.username}
+                      </span>
+                    </div>
                   </div>
                 )}
+
                 <p className={`text-foreground text-sm leading-relaxed italic relative z-10 ${isRepost ? 'line-clamp-6' : 'line-clamp-3'}`}>
-                  {highlightMatchesInText(tweet.quoted_tweet_text || repostContent || "", matchingOptions)}
+                  {highlightMatchesInText(repostContent || "", matchingOptions)}
                 </p>
+
+                {/* Media Image */}
+                {tweet.media_url && (
+                  <div className="mt-2.5 rounded-lg overflow-hidden border border-border/50 bg-black/20">
+                    <img 
+                      src={tweet.media_url} 
+                      alt="Tweet media" 
+                      className="w-full h-auto max-h-[300px] object-contain"
+                    />
+                  </div>
+                )}
               </div>
             )}
 

@@ -17,6 +17,11 @@ export interface Tweet {
   tweet_type: "post" | "quote" | "repost";
   quoted_tweet_id?: string;
   quoted_tweet_text?: string;
+  quoted_tweet_author_name?: string;
+  quoted_tweet_author_username?: string;
+  quoted_tweet_author_avatar?: string;
+  media_url?: string;
+  media_type?: string;
   matched_option_id?: string;
   matched_keywords?: string[];
   created_at_twitter: string;

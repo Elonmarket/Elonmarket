@@ -88,28 +88,75 @@ function stripHtml(html) {
 }
 
 /**
+ * Extract images from HTML string.
+ * Returns first two image URLs (usually avatar and first media).
+ */
+function extractImagesFromHtml(html) {
+  if (!html) return [];
+  const imgRegex = /<img[^>]+src="([^">]+)"/gi;
+  const urls = [];
+  let match;
+  while ((match = imgRegex.exec(html)) !== null) {
+    urls.push(match[1]);
+  }
+  return urls;
+}
+
+/**
  * Extract quoted tweet text from RSS item description (Nitter may put it in a blockquote).
- * Returns { mainText, quotedTweetText } so winner detection can match both.
+ * Returns { mainText, quotedTweetText, quotedAuthorName, quotedAuthorUsername, quotedAuthorAvatar, mediaUrl }
  */
 function parseQuoteFromDescription(title, description) {
   const mainText = (title || "").trim();
   const rawDesc = description || "";
-  if (!rawDesc) return { mainText, quotedTweetText: null };
+  const images = extractImagesFromHtml(rawDesc);
+  
+  // Default values
+  let result = { 
+    mainText, 
+    quotedTweetText: null,
+    quotedAuthorName: null,
+    quotedAuthorUsername: null,
+    quotedAuthorAvatar: images[0] || null,
+    mediaUrl: images[1] || null 
+  };
+
+  if (!rawDesc) return result;
 
   const blockquoteMatch = rawDesc.match(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/i);
   if (blockquoteMatch) {
-    const quotedTweetText = stripHtml(blockquoteMatch[1]).trim();
-    return { mainText, quotedTweetText: quotedTweetText || null };
+    const rawQuote = blockquoteMatch[1];
+    result.quotedTweetText = stripHtml(rawQuote).trim();
+    
+    // Try to extract author from blockquote if available
+    // Nitter often has <b>Author Name (@username)</b> inside blockquote
+    const authorMatch = rawQuote.match(/<b>([^<]+)\s+\((@\w+)\)<\/b>/i);
+    if (authorMatch) {
+      result.quotedAuthorName = authorMatch[1].trim();
+      result.quotedAuthorUsername = authorMatch[2].trim().replace("@", "");
+    }
+    return result;
   }
 
   // If this is a pure retweet ("RT by @...") and there's no blockquote,
   // treat the full description text as the quoted tweet so keywords match.
   if (/^RT by\s+@/i.test(mainText)) {
     const fullText = stripHtml(rawDesc).trim();
-    return { mainText, quotedTweetText: fullText || null };
+    
+    // Extract author from "Name (@handle): text" pattern
+    const authorPattern = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
+    const authorMatch = fullText.match(authorPattern);
+    
+    if (authorMatch) {
+      result.quotedAuthorName = authorMatch[1].trim();
+      result.quotedAuthorUsername = authorMatch[2].trim().replace("@", "");
+      result.quotedTweetText = authorMatch[3].trim();
+    } else {
+      result.quotedTweetText = fullText || null;
+    }
   }
 
-  return { mainText, quotedTweetText: null };
+  return result;
 }
 
 async function poll() {
@@ -159,7 +206,15 @@ async function poll() {
       }
 
       const isRt = /^RT by\s+@/i.test(title);
-      const { mainText, quotedTweetText } = parseQuoteFromDescription(title, description);
+      const { 
+        mainText, 
+        quotedTweetText, 
+        quotedAuthorName, 
+        quotedAuthorUsername, 
+        quotedAuthorAvatar, 
+        mediaUrl 
+      } = parseQuoteFromDescription(title, description);
+
       const body = {
         text: mainText,
         tweet_url: isRt ? guid : link,
@@ -169,6 +224,10 @@ async function poll() {
         tweet_type: isRt ? "repost" : (quotedTweetText ? "quote" : "post"),
       };
       if (quotedTweetText) body.quoted_tweet_text = quotedTweetText;
+      if (quotedAuthorName) body.quoted_author_name = quotedAuthorName;
+      if (quotedAuthorUsername) body.quoted_author_username = quotedAuthorUsername;
+      if (quotedAuthorAvatar) body.quoted_author_avatar = quotedAuthorAvatar;
+      if (mediaUrl) body.media_url = mediaUrl;
 
       const headers = { "Content-Type": "application/json" };
       if (WEBHOOK_SECRET) headers["x-webhook-secret"] = WEBHOOK_SECRET;
