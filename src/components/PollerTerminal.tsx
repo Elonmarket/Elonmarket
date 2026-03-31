@@ -19,7 +19,7 @@ const levelColors: Record<string, string> = {
   repost: "text-purple-400",
   quote: "text-pink-400",
   error: "text-red-400",
-  skip: "text-muted-foreground",
+  skip: "text-orange-400",
   success: "text-neon-green",
 };
 
