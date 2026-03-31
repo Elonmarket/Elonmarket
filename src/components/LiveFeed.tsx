@@ -179,10 +179,14 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;
 
-  const tweetUrl =
-    (tweet.author_username && tweet.tweet_id
-      ? `https://x.com/${tweet.author_username}/status/${tweet.tweet_id}`
-      : undefined) || tweet.tweet_url;
+  // For reposts, the tweet_id belongs to the original author's post, not Elon's.
+  // Linking to x.com/elonmusk/status/{original_id} would be broken.
+  // Instead, link to Elon's profile for reposts.
+  const tweetUrl = isRepost
+    ? "https://x.com/elonmusk"
+    : (tweet.author_username && tweet.tweet_id
+        ? `https://x.com/${tweet.author_username}/status/${tweet.tweet_id}`
+        : undefined) || tweet.tweet_url;
 
   return (
     <motion.div
