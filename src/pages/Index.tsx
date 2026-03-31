@@ -15,8 +15,8 @@ const Index = () => {
       <main>
         <HeroSection />
         <LiveFeed />
-        <PredictionVoting />
         <PollerTerminal />
+        <PredictionVoting />
         <ClaimSection />
         <Leaderboard />
       </main>
