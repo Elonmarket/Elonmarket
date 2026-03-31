@@ -179,11 +179,8 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;
 
-  // For reposts, tweet_id belongs to the original author, not Elon
-  const rtAuthorMatch = isRepost ? tweet.text.match(/^RT\s+@(\w+)/i) : null;
-  const linkUsername = isRepost && rtAuthorMatch ? rtAuthorMatch[1] : "elonmusk";
   const tweetUrl = tweet.tweet_id
-    ? `https://x.com/${linkUsername}/status/${tweet.tweet_id}`
+    ? `https://x.com/elonmusk/status/${tweet.tweet_id}`
     : tweet.tweet_url;
 
   return (
