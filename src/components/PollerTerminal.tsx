@@ -100,6 +100,16 @@ export const PollerTerminal = () => {
   return (
     <section className="py-6 px-2 sm:px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Title + Explainer above terminal */}
+        <div className="mb-4 px-1">
+          <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+            Elonmarket Terminal
+          </h3>
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            Monitoring Elon Musk's activities on X. Every post, every repost, every reply and every quoted repost — live streaming 24/7.
+          </p>
+        </div>
+
         <Card variant="glass" className="overflow-hidden border border-neon-green/20">
           {/* Terminal header */}
           <div className="flex items-center justify-between px-3 py-2 bg-black/60 border-b border-neon-green/10">
@@ -133,13 +143,6 @@ export const PollerTerminal = () => {
                 </>
               )}
             </div>
-          </div>
-
-          {/* Explainer */}
-          <div className="px-3 py-2 bg-black/40 border-b border-neon-green/5">
-            <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/70 leading-relaxed">
-              <span className="text-neon-green/80">⚡ Elonmarket Terminal</span> — Monitoring Elon Musk's activities on X. Every post, every repost, every reply and every quoted repost — live streaming 24/7.
-            </p>
           </div>
 
           {/* Log output */}
