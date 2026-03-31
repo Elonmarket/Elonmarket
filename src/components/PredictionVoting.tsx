@@ -157,7 +157,7 @@ export const PredictionVoting = () => {
           <h2 className="font-display text-lg md:text-xl font-semibold text-foreground mb-0.5">
             Markets
           </h2>
-          <p className="font-display text-lg mt-1 flex flex-col items-center gap-1 md:text-2xl font-semibold text-muted-foreground mb-0.5">
+          <p className="font-display text-xl mt-1 flex flex-col items-center gap-1 md:text-3xl font-bold text-foreground mb-0.5">
             {currentRound?.question || "What will Elon tweet about next?"}
           </p>
           {currentRound?.prediction_start_time && currentRound?.end_time && (
