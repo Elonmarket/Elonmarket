@@ -124,14 +124,15 @@ async function poll() {
         continue;
       }
 
+      const isRt = /^RT by\s+@/i.test(title);
       const { mainText, quotedTweetText } = parseQuoteFromDescription(title, description);
       const body = {
         text: mainText,
-        tweet_url: link,
+        tweet_url: isRt ? guid : link,
         created_at: pubDate,
         user_name: "Elon Musk",
         author_username: PROFILE_USERNAME,
-        tweet_type: quotedTweetText ? "quote" : "post",
+        tweet_type: isRt ? "repost" : (quotedTweetText ? "quote" : "post"),
       };
       if (quotedTweetText) body.quoted_tweet_text = quotedTweetText;
 

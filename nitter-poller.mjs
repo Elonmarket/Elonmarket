@@ -134,7 +134,7 @@ async function poll() {
       const { mainText, quotedTweetText } = parseQuoteFromDescription(title, description);
       const body = {
         text: mainText,
-        tweet_url: link,
+        tweet_url: isRt ? guid : link,
         created_at: pubDate,
         user_name: USER_DISPLAY_NAME,
         author_username: PROFILE_USERNAME,
