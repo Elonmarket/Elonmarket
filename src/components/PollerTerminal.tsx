@@ -176,7 +176,9 @@ export const PollerTerminal = () => {
                       {log.level}
                     </span>{" "}
                     <span className="text-foreground/70">
-                      {log.message}
+                      {log.level === "skip" && /reply/i.test(log.message)
+                        ? log.message.replace(/^Reply skipped:\s*/i, "Elon Musk Reply: ").replace(/^Skipped reply:\s*/i, "Elon Musk Reply: ")
+                        : log.message}
                     </span>
                   </motion.div>
                 ))}
