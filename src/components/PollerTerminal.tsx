@@ -98,39 +98,38 @@ export const PollerTerminal = () => {
   };
 
   return (
-    <section className="py-8 px-4">
+    <section className="py-6 px-2 sm:px-4">
       <div className="max-w-6xl mx-auto">
         <Card variant="glass" className="overflow-hidden border border-neon-green/20">
           {/* Terminal header */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-black/60 border-b border-neon-green/10">
-            <div className="flex items-center gap-2">
-              {/* Traffic lights */}
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-black/60 border-b border-neon-green/10">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="flex gap-1 sm:gap-1.5 shrink-0">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500/80" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-500/80" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500/80" />
               </div>
-              <Terminal className="w-3.5 h-3.5 text-neon-green/70 ml-2" />
-              <span className="text-xs font-mono text-neon-green/70 tracking-wide">
+              <Terminal className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neon-green/70 ml-1 sm:ml-2 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-mono text-neon-green/70 tracking-wide truncate">
                 elonmarket_terminal
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {connected ? (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <Wifi className="w-3 h-3 text-neon-green" />
-                  <span className="text-[10px] font-mono text-neon-green uppercase tracking-widest">
+                  <span className="text-[9px] sm:text-[10px] font-mono text-neon-green uppercase tracking-widest">
                     Live
                   </span>
-                  <span className="relative flex h-2 w-2">
+                  <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-neon-green" />
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <WifiOff className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                  <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                     Connecting
                   </span>
                 </div>
@@ -139,13 +138,13 @@ export const PollerTerminal = () => {
           </div>
 
           {/* Terminal description */}
-          <div className="px-4 py-2 bg-black/40 border-b border-neon-green/5">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-neon-green/50" />
-              <p className="text-[11px] font-mono text-muted-foreground">
+          <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-black/40 border-b border-neon-green/5">
+            <div className="flex items-start gap-1.5 sm:gap-2">
+              <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neon-green/50 shrink-0 mt-0.5" />
+              <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground leading-tight">
                 <span className="text-neon-green/70">Elonmarket Terminal</span>
                 {" — "}
-                Monitoring Elon Musk's activities on X in real time. Every post, every repost, every quote — live.
+                Monitoring Elon Musk's X activity live.
               </p>
             </div>
           </div>
@@ -153,16 +152,16 @@ export const PollerTerminal = () => {
           {/* Log output */}
           <div
             ref={scrollRef}
-            className="h-[240px] overflow-y-auto bg-black/80 px-4 py-3 font-mono text-xs leading-relaxed custom-scrollbar"
+            className="h-[200px] sm:h-[240px] overflow-y-auto bg-black/80 px-2 sm:px-4 py-2 sm:py-3 font-mono text-[10px] sm:text-xs leading-relaxed custom-scrollbar"
           >
             {logs.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <Terminal className="w-8 h-8 text-neon-green/20 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-[11px]">
+                  <Terminal className="w-6 h-6 sm:w-8 sm:h-8 text-neon-green/20 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-[10px] sm:text-[11px]">
                     Waiting for poller activity...
                   </p>
-                  <p className="text-muted-foreground/50 text-[10px] mt-1">
+                  <p className="text-muted-foreground/50 text-[9px] sm:text-[10px] mt-1">
                     Logs will appear here in real time
                   </p>
                 </div>
@@ -175,18 +174,18 @@ export const PollerTerminal = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="flex gap-2 py-0.5 hover:bg-white/[0.02] rounded px-1 -mx-1"
+                    className="flex items-start gap-1 sm:gap-2 py-0.5 hover:bg-white/[0.02] rounded px-0.5 sm:px-1 -mx-0.5 sm:-mx-1"
                   >
-                    <span className="text-muted-foreground/50 shrink-0 select-none">
+                    <span className="text-muted-foreground/50 shrink-0 select-none text-[9px] sm:text-xs">
                       {formatTime(log.created_at)}
                     </span>
-                    <span className="shrink-0 select-none w-4 text-center">
+                    <span className="shrink-0 select-none w-3 sm:w-4 text-center text-[10px] sm:text-xs">
                       {levelIcons[log.level] || "•"}
                     </span>
-                    <span className={`shrink-0 uppercase text-[10px] w-14 pt-px ${levelColors[log.level] || "text-foreground"}`}>
+                    <span className={`shrink-0 uppercase text-[8px] sm:text-[10px] w-10 sm:w-14 pt-px ${levelColors[log.level] || "text-foreground"}`}>
                       [{log.level}]
                     </span>
-                    <span className="text-foreground/80 break-all">
+                    <span className="text-foreground/80 break-all min-w-0">
                       {log.message}
                     </span>
                   </motion.div>
@@ -194,7 +193,7 @@ export const PollerTerminal = () => {
               </AnimatePresence>
             )}
 
-            {/* Blinking cursor at bottom */}
+            {/* Blinking cursor */}
             <div className="flex items-center gap-1 mt-1">
               <span className="text-neon-green/70">$</span>
               <span className="w-1.5 h-3.5 bg-neon-green/70 animate-pulse" />
@@ -202,12 +201,12 @@ export const PollerTerminal = () => {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-1.5 bg-black/60 border-t border-neon-green/10 flex items-center justify-between">
-            <span className="text-[10px] font-mono text-muted-foreground/50">
-              nitter-poller v1.0 • poll interval: 10s
+          <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-black/60 border-t border-neon-green/10 flex items-center justify-between">
+            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/50">
+              nitter-poller v1.0 • 10s
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground/50">
-              {logs.length} log entries
+            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/50">
+              {logs.length} entries
             </span>
           </div>
         </Card>
