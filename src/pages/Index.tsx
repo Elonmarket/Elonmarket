@@ -6,6 +6,7 @@ import { ClaimSection } from "@/components/ClaimSection";
 import { Leaderboard } from "@/components/Leaderboard";
 import { Footer } from "@/components/Footer";
 import { RoundResultDialog } from "@/components/RoundResultDialog";
+import { PollerTerminal } from "@/components/PollerTerminal";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
         <LiveFeed />
         <ClaimSection />
         <PredictionVoting />
+        <PollerTerminal />
         <Leaderboard />
       </main>
       <Footer />
