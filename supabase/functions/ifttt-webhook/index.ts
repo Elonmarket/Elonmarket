@@ -141,7 +141,11 @@ Deno.serve(async (req) => {
       parsedDate = new Date().toISOString();
     }
 
-    const tweetType = tweetTypeRaw === "quote" ? "quote" : tweetTypeRaw === "repost" ? "repost" : "post";
+    // Normalize tweet type — detect reposts from text even if tweet_type wasn't set
+    const rawType = tweetTypeRaw.toLowerCase();
+    const tweetType = rawType.includes("quote") ? "quote"
+      : rawType.includes("repost") || rawType.includes("retweet") || /^RT\s+@/i.test(tweetText) ? "repost"
+      : "post";
 
     const tweetRecord = {
       tweet_id: tweetId,
