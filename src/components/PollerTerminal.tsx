@@ -172,18 +172,27 @@ export const PollerTerminal = () => {
                     <span className="text-muted-foreground/40 select-none">
                       [{formatTime(log.created_at)}]
                     </span>{" "}
-                    <span className={`font-bold uppercase ${levelColors[log.level] || "text-foreground"}`}>
-                      {log.level}
-                    </span>{" "}
-                    <span className="text-foreground/70">
-                      {log.level === "skip" && /reply/i.test(log.message)
-                        ? log.message.replace(/^Reply skipped:\s*/i, "Elon Musk Reply: ").replace(/^Skipped reply:\s*/i, "Elon Musk Reply: ")
-                        : log.level === "quote" && /New quote detected:/i.test(log.message)
-                        ? log.message.replace(/^New quote detected:\s*/i, "Elon Musk quote: ")
-                        : log.level === "tweet" && /New post detected:/i.test(log.message)
-                        ? log.message.replace(/^New post detected:\s*/i, "Elon Musk post: ")
-                        : log.message}
-                    </span>
+                    {log.level === "tweet" && /New post detected:/i.test(log.message) ? (
+                      <>
+                        <span className="font-bold uppercase text-neon-green">POST</span>{" "}
+                        <span className="text-foreground/70">
+                          Elon Musk Post: {log.message.replace(/^New post detected:\s*/i, "")}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={`font-bold uppercase ${levelColors[log.level] || "text-foreground"}`}>
+                          {log.level}
+                        </span>{" "}
+                        <span className="text-foreground/70">
+                          {log.level === "skip" && /reply/i.test(log.message)
+                            ? log.message.replace(/^Reply skipped:\s*/i, "Elon Musk Reply: ").replace(/^Skipped reply:\s*/i, "Elon Musk Reply: ")
+                            : log.level === "quote" && /New quote detected:/i.test(log.message)
+                            ? log.message.replace(/^New quote detected:\s*/i, "Elon Musk quote: ")
+                            : log.message}
+                        </span>
+                      </>
+                    )}
                   </motion.div>
                 ))}
               </AnimatePresence>
