@@ -198,12 +198,7 @@ async function poll() {
         continue;
       }
 
-      // Deduplicate: if the core text (stripped of RT prefix) was already sent, skip
-      if (!/^RT by\s+@/i.test(title) && isDuplicateText(title)) {
-        await log("skip", `Duplicate skipped: ${title.slice(0, 60)}`);
-        lastTweetId = guid;
-        continue;
-      }
+      // Dedup is handled by lastTweetId (guid comparison) above — no text-based dedup needed
 
       const isRt = /^RT by\s+@/i.test(title);
       const { 
