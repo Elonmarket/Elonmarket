@@ -57,30 +57,6 @@ console.log("Using PROFILE_USERNAME:", PROFILE_USERNAME);
 
 let lastTweetId = null;
 
-// Buffer of recent tweet texts (stripped of RT prefix) to deduplicate reposts
-const recentTexts = [];
-const MAX_RECENT_TEXTS = 50;
-
-/** Strip the "RT by @username: " prefix from tweet text for dedup comparison. */
-function stripRtPrefix(text) {
-  return (text || "").replace(/^RT by\s+@\w+:\s*/i, "").trim().toLowerCase();
-}
-
-/** Check if text is a duplicate of a recently sent tweet. */
-function isDuplicateText(text) {
-  const stripped = stripRtPrefix(text);
-  if (!stripped) return false;
-  return recentTexts.includes(stripped);
-}
-
-/** Track a sent tweet's text for future dedup. */
-function trackText(text) {
-  const stripped = stripRtPrefix(text);
-  if (!stripped || recentTexts.includes(stripped)) return;
-  recentTexts.push(stripped);
-  if (recentTexts.length > MAX_RECENT_TEXTS) recentTexts.shift();
-}
-
 /** Strip HTML tags from a string. */
 function stripHtml(html) {
   if (!html || typeof html !== "string") return "";
