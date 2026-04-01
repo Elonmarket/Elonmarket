@@ -172,7 +172,7 @@ export const PollerTerminal = () => {
                     <span className="text-muted-foreground/40 select-none">
                       [{formatTime(log.created_at)}]
                     </span>{" "}
-                    {log.level === "tweet" && /New post detected:/i.test(log.message) ? (
+                    {/New post detected:/i.test(log.message) ? (
                       <>
                         <span className="font-bold uppercase text-neon-green">POST</span>{" "}
                         <span className="text-foreground/70">
