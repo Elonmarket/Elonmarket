@@ -9,11 +9,12 @@ const corsHeaders = {
 /** Strip repost headers and "DisplayName (@username)" patterns so account names don't cause false matches. */
 function stripAttributionPatterns(text: string): string {
   let cleaned = text;
-  // Remove "RT by @username:" prefix
-  cleaned = cleaned.replace(/^RT by @\S+:\s*/i, "");
-  // Remove attribution labels like "SpaceX (@SpaceX)" before keyword matching.
-  cleaned = cleaned.replace(/\b[^()\n]+?\s*\(@[A-Za-z0-9_]+\)/g, "");
-  return cleaned;
+  // Remove "RT by @username:" or "RT @username:" prefix
+  cleaned = cleaned.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "");
+  // Remove "DisplayName (@username)" / "DisplayName (@username):" patterns
+  // e.g. "Tesla Motors (@tesla):" or "SpaceX (@SpaceX)"
+  cleaned = cleaned.replace(/[^(@)\n]+?\s*\(@[A-Za-z0-9_]+\)\s*:?\s*/g, "");
+  return cleaned.trim();
 }
 
 /** Combined text for matching: main tweet + quoted tweet, with attribution stripped. */
@@ -242,7 +243,7 @@ async function processLiveDetection(
   }
 
   for (const tweet of tweets) {
-    if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
+    // Include posts, quotes, AND reposts for keyword matching
 
     const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {
@@ -298,7 +299,7 @@ async function processWinnerDetection(
   }
 
   for (const tweet of tweets) {
-    if (tweet.tweet_type !== "post" && tweet.tweet_type !== "quote") continue;
+    // Include posts, quotes, AND reposts for keyword matching
 
     const match = matchTweetToOption(getTweetTextForMatching(tweet), options);
     if (match) {

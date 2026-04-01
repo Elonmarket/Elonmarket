@@ -131,9 +131,10 @@ const stripAttributionPatterns = (text: string): string => {
   let cleaned = text;
   // Remove "RT by @username:" or "RT @username:" prefix
   cleaned = cleaned.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "");
-  // Remove "DisplayName (@username)" patterns (e.g. "Tesla Motors (@tesla)")
-  cleaned = cleaned.replace(/\b[\w\s]+\(@\w+\)/g, "");
-  return cleaned;
+  // Remove "DisplayName (@username)" / "DisplayName (@username):" patterns
+  // e.g. "Tesla Motors (@tesla):" or "SpaceX (@SpaceX)"
+  cleaned = cleaned.replace(/[^(@)\n]+?\s*\(@[A-Za-z0-9_]+\)\s*:?\s*/g, "");
+  return cleaned.trim();
 };
 
 const getTextForMatching = (t: Tweet) => {
