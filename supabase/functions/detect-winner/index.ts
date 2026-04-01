@@ -13,7 +13,8 @@ function stripAttributionPatterns(text: string): string {
   cleaned = cleaned.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "");
   // Remove "DisplayName (@username)" / "DisplayName (@username):" patterns
   // e.g. "Tesla Motors (@tesla):" or "SpaceX (@SpaceX)"
-  cleaned = cleaned.replace(/[^(@)\n]+?\s*\(@[A-Za-z0-9_]+\)\s*:?\s*/g, "");
+  // Uses word characters + spaces before the (@handle) to avoid over-matching
+  cleaned = cleaned.replace(/[\w][\w\s]*?\s*\(@[A-Za-z0-9_]+\)\s*:?\s*/g, "");
   return cleaned.trim();
 }
 
