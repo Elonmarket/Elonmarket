@@ -148,7 +148,7 @@ export const PollerTerminal = () => {
           {/* Log output */}
           <div
             ref={scrollRef}
-            className="h-[220px] sm:h-[260px] overflow-y-auto bg-black/90 px-3 py-2 font-mono text-[11px] sm:text-xs leading-[1.6] custom-scrollbar"
+            className="h-[220px] sm:h-[260px] overflow-y-auto bg-black/90 px-2 sm:px-3 py-1 sm:py-2 font-mono text-[10px] sm:text-xs leading-[1.35] sm:leading-[1.6] custom-scrollbar"
           >
             {logs.length === 0 ? (
               <div className="flex items-center justify-center h-full">
