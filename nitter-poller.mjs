@@ -174,7 +174,7 @@ async function poll() {
         continue;
       }
 
-      // Dedup is handled by lastTweetId (guid comparison) above — no text-based dedup needed
+      
 
       const isRt = /^RT by\s+@/i.test(title);
       const { 
