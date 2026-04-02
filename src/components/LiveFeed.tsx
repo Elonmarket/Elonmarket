@@ -191,8 +191,12 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
     : tweet.quoted_tweet_text;
 
-  // Preserve @mentions (e.g. @Tesla, @SpaceX) - only collapse extra spaces
-  const cleanText = tweet.text.replace(/\s{2,}/g, " ").trim();
+  // Clean display text: strip "Name (@username):" attribution and Nitter URLs
+  const cleanText = tweet.text
+    .replace(/^[\w\s]+\(@\w+\)\s*:\s*/i, "")
+    .replace(/https?:\/\/(?:127\.0\.0\.1:\d+|nitter\.[^\s]+)[^\s]*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   const truncatedText = cleanText.length > 180
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;
