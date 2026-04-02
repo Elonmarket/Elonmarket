@@ -60,7 +60,7 @@ Our dedicated scraping engine monitors Elon's X profile in real-time. A valid wi
 ### 6️⃣ Automated Distribution
 Once a winner is determined:
 1. The system identifies all users who voted for the winning category.
-2. The reward pool (10-20% of the current vault balance) is finalized.
+2. The reward pool (2-10% of the current vault balance) is finalized.
 3. **SOL is distributed automatically** to the winner(s) via the vault.
 4. No claiming or gas fees required from the user.
 

@@ -351,7 +351,7 @@ const Docs = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-border bg-card">
                     <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Payout Amount</p>
-                    <p className="text-2xl font-bold text-neon-green">10% – 20%</p>
+                    <p className="text-2xl font-bold text-neon-green">2% – 10%</p>
                     <p className="text-[10px] text-muted-foreground mt-1">of current Vault Balance</p>
                   </div>
                   <div className="p-4 rounded-xl border border-border bg-card">
@@ -524,7 +524,7 @@ const Docs = () => {
                     <tbody className="divide-y divide-border/50">
                        <tr><td className="px-6 py-4 font-bold">Eligibility</td><td className="px-6 py-4 text-muted-foreground">Username + $EMARKET Token Holding</td></tr>
                        <tr><td className="px-6 py-4 font-bold">Voting</td><td className="px-6 py-4 text-muted-foreground">Max 1 vote per round per user</td></tr>
-                       <tr><td className="px-6 py-4 font-bold">Payouts</td><td className="px-6 py-4 text-muted-foreground">10% - 20% of vault per round</td></tr>
+                       <tr><td className="px-6 py-4 font-bold">Payouts</td><td className="px-6 py-4 text-muted-foreground">2% - 10% of vault per round</td></tr>
                        <tr><td className="px-6 py-4 font-bold">Claiming</td><td className="px-6 py-4 text-muted-foreground">Not required (Fully Automated)</td></tr>
                     </tbody>
                   </table>
