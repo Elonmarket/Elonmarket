@@ -13,7 +13,7 @@ export const Footer = () => {
             </div>
             </div>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Free-to-play prediction market. Predict Elon's tweets, win SOL.
+              Free-to-play Elon prediction market. Predict Elon's tweets, win SOL.
             </p>
           </div>
 

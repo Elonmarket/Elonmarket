@@ -84,7 +84,7 @@ export const HeroSection = () => {
           </p>
 
           <p className="text-base text-muted-foreground mb-8 max-w-xl mx-auto animate-slide-up" style={{ animationDelay: "0.3s" }}>
-            Free-to-play prediction market powered by Solana. 
+            Free-to-play Elon prediction market powered by Solana. 
             Hold $EMARKET tokens, make predictions, earn rewards.
           </p>
 

@@ -164,7 +164,7 @@ const Docs = () => {
               <h1 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Overview</h1>
               <div className="text-xl text-muted-foreground leading-relaxed mb-8 space-y-4">
                 <p>
-                  <span className="text-foreground font-bold">ElonMarket</span> is a decentralized, free-to-play prediction market where people predict what Elon Musk will post first on X among the prediction options available.
+                  <span className="text-foreground font-bold">ElonMarket</span> is a decentralized, free-to-play Elon prediction market where people predict what Elon Musk will post first on X among the prediction options available.
                 </p>
                 <p>
                   The game works by letting players vote on different topic options for Elon's post for example Grok, Starlink, Tesla, or X. Each round collects votes from the community on which topic they believe Elon will post about first among the topics.
