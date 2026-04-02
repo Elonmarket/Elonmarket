@@ -106,7 +106,7 @@ export const PollerTerminal = () => {
             Elonmarket Terminal
           </h3>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Live 24/7 feed of every Elon Musk post, repost, quote &amp; replies — no delays, no filters. The fastest way to track what Elon is saying in real time.
+            Fastest Elon Tracking in the world. Live 24/7 feed of every Elon Musk post, repost, quote &amp; replies — no delays, no filters.
           </p>
         </div>
 
