@@ -396,7 +396,7 @@ export const LiveFeed = () => {
                 Live
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">Real-time posts from <a href="https://x.com/elonmusk" target="_blank" rel="noopener noreferrer" className="text-neon-green hover:underline">Elon Musk</a></p>
+            <p className="text-sm text-muted-foreground">Real-time posts from <a href="https://x.com/elonmusk" target="_blank" rel="noopener noreferrer" className="text-muted-foreground underline decoration-muted-foreground/30 underline-offset-2 hover:decoration-muted-foreground/60 transition-colors">@elonmusk</a></p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="gap-1.5">
