@@ -193,8 +193,9 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
 
   // Helper: strip "Name (@username):" attribution and Nitter URLs
   const stripDisplayNoise = (t: string) =>
-    t.replace(/[\w][\w\s]*?\(@\w+\)\s*:?\s*/g, "")
-     .replace(/https?:\/\/(?:127\.0\.0\.1:\d+|nitter\.[^\s]+)[^\s]*/gi, "")
+    t.replace(/^[^(\n]{0,80}\(@[A-Za-z0-9_]+\)\s*:?\s*/u, "")
+     .replace(/\s[^(\s]{0,80}\(@[A-Za-z0-9_]+\)\s*:?\s*/gu, " ")
+     .replace(/https?:\/\/(?:127\.0\.0\.1:\d+|nitter\.[^\s/]+)\/\S*/gi, "")
      .replace(/\s*—\s*$/, "")
      .replace(/\s{2,}/g, " ")
      .trim();
