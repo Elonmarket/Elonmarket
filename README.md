@@ -52,7 +52,7 @@ Each round features curated options based on the Elon
 
 ### 5️⃣ Real-Time Monitoring & Validation
 Our dedicated scraping engine monitors Elon's X profile in real-time. A valid winning post must:
-- Be authored or reposted by Elon.
+- Be authored post, qoute or reposted by Elon except replies.
 - Appear within the prediction window.
 - Contain an exact keyword match (e.g., "Starlink" or "@Tesla").
 - Be the **first** matching option detected in the window.
