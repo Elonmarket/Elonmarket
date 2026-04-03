@@ -98,9 +98,12 @@ Deno.serve(async (req) => {
 
     // ── Build tweet record ─────────────────────────────
     const tweetIdMatch = tweetUrl.match(/status\/(\d+)/);
-    const tweetId = tweetIdMatch
+    const rawTweetId = tweetIdMatch
       ? tweetIdMatch[1]
       : `ifttt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Prefix repost IDs to avoid overwriting the original tweet via upsert
+    const isRepostText = /^RT\s+(by\s+)?@/i.test(tweetText) || (body.tweet_type || "").toLowerCase().includes("repost");
+    const tweetId = isRepostText ? `rt_${rawTweetId}` : rawTweetId;
 
     // IFTTT sends timestamps in the applet-owner's local timezone.
     // Configure this offset (in hours) to match your IFTTT account timezone.
