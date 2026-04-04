@@ -206,9 +206,11 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     ? cleanText.slice(0, 180).trim() + "…"
     : cleanText;
 
-  const tweetUrl = tweet.tweet_id
-    ? `https://x.com/elonmusk/status/${tweet.tweet_id}`
-    : tweet.tweet_url;
+  const tweetUrl = tweet.tweet_url
+    ? tweet.tweet_url
+    : tweet.tweet_id && !tweet.tweet_id.startsWith("rt_") && !tweet.tweet_id.startsWith("ifttt_")
+      ? `https://x.com/${tweet.author_username || "elonmusk"}/status/${tweet.tweet_id}`
+      : null;
 
   return (
     <motion.div
