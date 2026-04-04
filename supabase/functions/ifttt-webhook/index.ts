@@ -98,9 +98,18 @@ Deno.serve(async (req) => {
 
     // ── Build tweet record ─────────────────────────────
     const tweetIdMatch = tweetUrl.match(/status\/(\d+)/);
-    const tweetId = tweetIdMatch
+    const rawTweetId = tweetIdMatch
       ? tweetIdMatch[1]
       : `ifttt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Normalize tweet type early so we can use it for ID prefixing
+    const rawType = tweetTypeRaw.toLowerCase();
+    const tweetType = rawType.includes("quote") ? "quote"
+      : rawType.includes("repost") || rawType.includes("retweet") || /^RT\s+@/i.test(tweetText) ? "repost"
+      : "post";
+
+    // Prefix repost IDs with "rt_" to avoid overwriting original tweets with the same status ID
+    const tweetId = tweetType === "repost" ? `rt_${rawTweetId}` : rawTweetId;
 
     // IFTTT sends timestamps in the applet-owner's local timezone.
     // Configure this offset (in hours) to match your IFTTT account timezone.
