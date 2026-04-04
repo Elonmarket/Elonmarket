@@ -179,7 +179,9 @@ Deno.serve(async (req) => {
       quoted_tweet_author_avatar: (tweetType === "quote" || tweetType === "repost") ? quotedTweetAuthorAvatar : null,
       media_url: mediaUrl,
       media_type: mediaUrl ? mediaType : null,
-      created_at_twitter: parsedDate,
+      // For reposts, always use current time so they appear at the top of the feed
+      // (not buried at the original post's timestamp from hours/days ago)
+      created_at_twitter: tweetType === "repost" ? new Date().toISOString() : parsedDate,
       fetched_at: new Date().toISOString(),
     };
 

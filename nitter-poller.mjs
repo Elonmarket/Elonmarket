@@ -84,22 +84,79 @@ function extractImagesFromHtml(html) {
 }
 
 /**
+ * Extract the profile avatar URL from Nitter HTML.
+ * Nitter puts profile pics as small <img> inside <a> tags linking to the user profile.
+ * Media images are usually larger or inside different containers.
+ */
+function extractAvatarFromHtml(html) {
+  if (!html) return null;
+  // Look for profile pic pattern: <a href="/username"><img src="...pic/profile_images..." /></a>
+  const avatarMatch = html.match(/<a[^>]+href="\/[^"]+"><img[^>]+src="([^"]+pic\/profile_images[^"]+)"/i);
+  if (avatarMatch) return avatarMatch[1];
+  // Fallback: look for any pic/profile_images URL
+  const profilePicMatch = html.match(/src="([^"]*pic\/profile_images[^"]*)"/i);
+  if (profilePicMatch) return profilePicMatch[1];
+  return null;
+}
+
+/**
+ * Extract media images from Nitter HTML (excluding profile avatars).
+ * Returns the first media image URL found.
+ */
+function extractMediaFromHtml(html) {
+  if (!html) return null;
+  const images = extractImagesFromHtml(html);
+  // Filter out profile images — media images typically contain pic/media, pic/tweet_video, pic/amplify
+  for (const url of images) {
+    if (/pic\/(media|tweet_video|amplify|ext_tw)/i.test(url)) return url;
+  }
+  // Fallback: return first non-profile image
+  for (const url of images) {
+    if (!/pic\/profile_images/i.test(url)) return url;
+  }
+  return null;
+}
+
+/**
+ * Extract author info from Nitter HTML description.
+ * Nitter formats: <b>Display Name</b> or links to /@username
+ */
+function extractAuthorFromHtml(html) {
+  if (!html) return { name: null, username: null };
+
+  // Pattern 1: <a href="/@username">@username</a>
+  const usernameMatch = html.match(/<a[^>]+href="\/@([^"]+)"[^>]*>/i);
+  // Pattern 2: <b>Display Name</b>
+  const nameMatch = html.match(/<b>([^<]+)<\/b>/i);
+  // Pattern 3: "Display Name (@username)" in bold
+  const combinedMatch = html.match(/<b>([^<]+)\s*\(@(\w+)\)<\/b>/i);
+
+  if (combinedMatch) {
+    return { name: combinedMatch[1].trim(), username: combinedMatch[2].trim() };
+  }
+
+  return {
+    name: nameMatch ? nameMatch[1].trim() : null,
+    username: usernameMatch ? usernameMatch[1].trim() : null,
+  };
+}
+
+/**
  * Extract quoted tweet text from RSS item description (Nitter may put it in a blockquote).
  * Returns { mainText, quotedTweetText, quotedAuthorName, quotedAuthorUsername, quotedAuthorAvatar, mediaUrl }
  */
 function parseQuoteFromDescription(title, description) {
   const mainText = (title || "").trim();
   const rawDesc = description || "";
-  const images = extractImagesFromHtml(rawDesc);
-  
+
   // Default values
-  let result = { 
-    mainText, 
+  let result = {
+    mainText,
     quotedTweetText: null,
     quotedAuthorName: null,
     quotedAuthorUsername: null,
-    quotedAuthorAvatar: images[0] || null,
-    mediaUrl: images[1] || null 
+    quotedAuthorAvatar: extractAvatarFromHtml(rawDesc),
+    mediaUrl: extractMediaFromHtml(rawDesc)
   };
 
   if (!rawDesc) return result;
@@ -108,14 +165,21 @@ function parseQuoteFromDescription(title, description) {
   if (blockquoteMatch) {
     const rawQuote = blockquoteMatch[1];
     result.quotedTweetText = stripHtml(rawQuote).trim();
-    
-    // Try to extract author from blockquote if available
-    // Nitter often has <b>Author Name (@username)</b> inside blockquote
+
+    // Extract author from blockquote HTML
     const authorMatch = rawQuote.match(/<b>([^<]+)\s+\((@\w+)\)<\/b>/i);
     if (authorMatch) {
       result.quotedAuthorName = authorMatch[1].trim();
       result.quotedAuthorUsername = authorMatch[2].trim().replace("@", "");
+    } else {
+      // Try extracting from the HTML structure
+      const htmlAuthor = extractAuthorFromHtml(rawQuote);
+      if (htmlAuthor.name) result.quotedAuthorName = htmlAuthor.name;
+      if (htmlAuthor.username) result.quotedAuthorUsername = htmlAuthor.username;
     }
+    // Get avatar from blockquote specifically if available
+    const quoteAvatar = extractAvatarFromHtml(rawQuote);
+    if (quoteAvatar) result.quotedAuthorAvatar = quoteAvatar;
     return result;
   }
 
@@ -123,16 +187,26 @@ function parseQuoteFromDescription(title, description) {
   // treat the full description text as the quoted tweet so keywords match.
   if (/^RT by\s+@/i.test(mainText)) {
     const fullText = stripHtml(rawDesc).trim();
-    
-    // Extract author from "Name (@handle): text" pattern
-    const authorPattern = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
-    const authorMatch = fullText.match(authorPattern);
-    
+
+    // Try multiple patterns for author extraction
+    // Pattern 1: "Name (@handle): text"
+    const authorPattern1 = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
+    // Pattern 2: "Name (@handle)\ntext" (newline instead of colon)
+    const authorPattern2 = /^([^(@\n]+)\s+\((@\w+)\)\s*\n(.*)$/s;
+
+    const match1 = fullText.match(authorPattern1);
+    const match2 = fullText.match(authorPattern2);
+    const authorMatch = match1 || match2;
+
     if (authorMatch) {
       result.quotedAuthorName = authorMatch[1].trim();
       result.quotedAuthorUsername = authorMatch[2].trim().replace("@", "");
       result.quotedTweetText = authorMatch[3].trim();
     } else {
+      // Try extracting author from the HTML structure
+      const htmlAuthor = extractAuthorFromHtml(rawDesc);
+      if (htmlAuthor.name) result.quotedAuthorName = htmlAuthor.name;
+      if (htmlAuthor.username) result.quotedAuthorUsername = htmlAuthor.username;
       result.quotedTweetText = fullText || null;
     }
   }
@@ -205,7 +279,9 @@ async function poll() {
       const body = {
         text: mainText,
         tweet_url: isRt ? guid : link,
-        created_at: pubDate,
+        // For reposts, use current time (when repost was detected) so they appear
+        // at the top of the feed, not buried at the original post's time.
+        created_at: isRt ? new Date().toISOString() : pubDate,
         user_name: USER_DISPLAY_NAME,
         author_username: PROFILE_USERNAME,
         tweet_type: isRt ? "repost" : (quotedTweetText ? "quote" : "post"),
