@@ -170,14 +170,14 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     return () => clearInterval(interval);
   }, [postDate.getTime()]);
 
-  // Detect if it's a pure repost based on tweet_type or text prefix
-  const isRepost = tweet.tweet_type === "repost" || /^RT\s+(by\s+)?@/i.test(tweet.text);
-  const isQuote = tweet.tweet_type === "quote" && !isRepost;
+    // Detect if it's a pure repost based on tweet_type or text prefix
+    const isRepost = tweet.tweet_type === "repost" || /^RT\s+(by\s+)?@/i.test(tweet.text);
+    const isQuote = tweet.tweet_type === "quote" && !isRepost;
 
-  // Extract author info if we don't have it structured yet
-  // This helps for older tweets or if poller extraction fails
-  const authorPattern = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
-  const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
+    // Extract author info if we don't have it structured yet
+    // This helps for older tweets or if poller extraction fails
+    const authorPattern = /^([^(@\n]+)\s+\((@\w+)\):\s*(.*)$/s;
+    const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
   const authorMatch = !tweet.quoted_tweet_author_username ? rawTextForRepost.match(authorPattern) : null;
   
   const originalAuthor = {
