@@ -60,72 +60,19 @@ function stripHtml(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function decodeHtmlEntities(value) {
-  return (value || "")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
-}
-
-function normalizeNitterUrl(url) {
-  if (!url) return null;
-  const decoded = decodeHtmlEntities(String(url).trim());
-  if (!decoded) return null;
-  if (/^https?:\/\//i.test(decoded)) return decoded;
-  if (decoded.startsWith("//")) return `https:${decoded}`;
-  if (decoded.startsWith("/")) return `${NITTER_BASE_URL.replace(/\/$/, "")}${decoded}`;
-  return decoded;
-}
-
-function extractAssetUrls(html) {
-  if (!html) return [];
-  const urls = [];
-  const attrRegex = /\b(?:src|href|poster)=("|')(.*?)\1/gi;
-  let match;
-  while ((match = attrRegex.exec(html)) !== null) {
-    const normalized = normalizeNitterUrl(match[2]);
-    if (normalized) urls.push(normalized);
-  }
-  return [...new Set(urls)];
-}
-
-function isProfileImageUrl(url) {
-  return /(?:pic\/|%2F)(?:profile_images|default_profile_images)/i.test(url)
-    || /pbs\.twimg\.com\/profile_images/i.test(url);
-}
-
-function isTweetMediaUrl(url) {
-  return /(?:pic\/|%2F)(?:media|tweet_video|amplify|ext_tw|cards_images)/i.test(url)
-    || /pbs\.twimg\.com\/(?:media|amplify_video_thumb|ext_tw_video_thumb)/i.test(url)
-    || /video\.twimg\.com/i.test(url);
-}
-
 /**
  * Extract images from HTML string.
- * Returns normalized asset URLs from img/src, links, and poster attributes.
+ * Returns first two image URLs (usually avatar and first media).
  */
 function extractImagesFromHtml(html) {
-  return extractAssetUrls(html).filter((url) =>
-    isProfileImageUrl(url)
-    || isTweetMediaUrl(url)
-    || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url)
-  );
-}
-
-function extractAvatarFromHtml(html) {
-  const imageUrls = extractImagesFromHtml(html);
-  return imageUrls.find((url) => isProfileImageUrl(url)) || null;
-}
-
-function extractMediaFromHtml(html) {
-  const assetUrls = extractAssetUrls(html);
-  const explicitMedia = assetUrls.find((url) => isTweetMediaUrl(url) && !isProfileImageUrl(url));
-  if (explicitMedia) return explicitMedia;
-
-  const imageUrls = extractImagesFromHtml(html).filter((url) => !isProfileImageUrl(url));
-  return imageUrls[0] || null;
+  if (!html) return [];
+  const imgRegex = /<img[^>]+src="([^">]+)"/gi;
+  const urls = [];
+  let match;
+  while ((match = imgRegex.exec(html)) !== null) {
+    urls.push(match[1]);
+  }
+  return urls;
 }
 
 /**
@@ -135,15 +82,16 @@ function extractMediaFromHtml(html) {
 function parseQuoteFromDescription(title, description) {
   const mainText = (title || "").trim();
   const rawDesc = description || "";
-
+  const images = extractImagesFromHtml(rawDesc);
+  
   // Default values
-  const result = {
-    mainText,
+  let result = { 
+    mainText, 
     quotedTweetText: null,
     quotedAuthorName: null,
     quotedAuthorUsername: null,
-    quotedAuthorAvatar: extractAvatarFromHtml(rawDesc),
-    mediaUrl: extractMediaFromHtml(rawDesc),
+    quotedAuthorAvatar: images[0] || null,
+    mediaUrl: images[1] || null 
   };
 
   if (!rawDesc) return result;
@@ -219,9 +167,6 @@ async function poll() {
       const title = (item.title && item.title[0]) || "";
       const description = (item.description && item.description[0]) || (item["content:encoded"] && item["content:encoded"][0]) || "";
       const pubDate = (item.pubDate && item.pubDate[0]) || new Date().toISOString();
-      const feedMediaUrl = (item.enclosure && item.enclosure[0] && item.enclosure[0].$ && item.enclosure[0].$.url)
-        || (item["media:content"] && item["media:content"][0] && item["media:content"][0].$ && item["media:content"][0].$.url)
-        || "";
 
       // Check if we have already processed this GUID
       if (processedIds.includes(guid)) {
@@ -243,7 +188,6 @@ async function poll() {
         quotedAuthorAvatar, 
         mediaUrl 
       } = parseQuoteFromDescription(title, description);
-      const finalMediaUrl = mediaUrl || normalizeNitterUrl(feedMediaUrl);
 
       const body = {
         text: mainText,
@@ -257,7 +201,7 @@ async function poll() {
       if (quotedAuthorName) body.quoted_author_name = quotedAuthorName;
       if (quotedAuthorUsername) body.quoted_author_username = quotedAuthorUsername;
       if (quotedAuthorAvatar) body.quoted_author_avatar = quotedAuthorAvatar;
-      if (finalMediaUrl) body.media_url = finalMediaUrl;
+      if (mediaUrl) body.media_url = mediaUrl;
 
       const headers = { "Content-Type": "application/json" };
       if (WEBHOOK_SECRET) headers["x-webhook-secret"] = WEBHOOK_SECRET;

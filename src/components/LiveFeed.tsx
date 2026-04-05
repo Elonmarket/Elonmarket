@@ -324,17 +324,6 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
               </div>
             )}
 
-            {/* Media Image for original posts (not inside a repost/quote block) */}
-            {!repostContent && tweet.media_url && (
-              <div className="mt-3 rounded-xl overflow-hidden border border-border/50 bg-black/20">
-                <img 
-                  src={tweet.media_url} 
-                  alt="Tweet media" 
-                  className="w-full h-auto max-h-[300px] object-cover rounded-xl"
-                />
-              </div>
-            )}
-
             {hasMatch && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 <Sparkles className="w-3.5 h-3.5 text-neon-green" />
