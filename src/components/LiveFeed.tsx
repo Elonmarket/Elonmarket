@@ -312,16 +312,17 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
                   {highlightMatchesInText(repostContent || "", matchingOptions)}
                 </p>
 
-                {/* Media Image */}
-                {tweet.media_url && (
-                  <div className="mt-2.5 rounded-lg overflow-hidden border border-border/50 bg-black/20">
-                    <img 
-                      src={tweet.media_url} 
-                      alt="Tweet media" 
-                      className="w-full h-auto max-h-[300px] object-contain"
-                    />
-                  </div>
-                )}
+              </div>
+            )}
+
+            {/* Media Image — full width for all tweet types */}
+            {tweet.media_url && (
+              <div className="mt-2.5 rounded-lg overflow-hidden border border-border/50 bg-black/20">
+                <img 
+                  src={tweet.media_url} 
+                  alt="Tweet media" 
+                  className="w-full h-auto max-h-[400px] object-cover"
+                />
               </div>
             )}
 
