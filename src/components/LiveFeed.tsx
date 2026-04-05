@@ -170,27 +170,26 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     return () => clearInterval(interval);
   }, [postDate.getTime()]);
 
-    // Detect if it's a pure repost based on tweet_type or text prefix
-    const isRepost = tweet.tweet_type === "repost" || /^RT\s+(by\s+)?@/i.test(tweet.text);
-    const isQuote = tweet.tweet_type === "quote" && !isRepost;
+  // Detect if it's a pure repost based on tweet_type or text prefix
+  const isRepost = tweet.tweet_type === "repost" || /^RT\s+(by\s+)?@/i.test(tweet.text);
+  const isQuote = tweet.tweet_type === "quote" && !isRepost;
 
-    // Extract author info if we don't have it structured yet
-    // This helps for older tweets or if poller extraction fails
-    const authorPattern = /^([^(@\n]+)\s+\((@\w+)\):\s*(.*)$/s;
-    const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
-    const authorMatch = rawTextForRepost.match(authorPattern);
+  // Extract author info if we don't have it structured yet
+  // This helps for older tweets or if poller extraction fails
+  const authorPattern = /^([^(@]+)\s+\((@\w+)\):\s*(.*)$/s;
+  const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
+  const authorMatch = !tweet.quoted_tweet_author_username ? rawTextForRepost.match(authorPattern) : null;
   
-    // For reposts, try to resolve original author from DB fields, then text pattern, then URL
-    const originalAuthor = {
-      name: tweet.quoted_tweet_author_name || (authorMatch ? authorMatch[1].trim() : null),
-      username: tweet.quoted_tweet_author_username || (authorMatch ? authorMatch[2].trim().replace("@", "") : null),
-      avatar: tweet.quoted_tweet_author_avatar || null
-    };
+  const originalAuthor = {
+    name: tweet.quoted_tweet_author_name || (authorMatch ? authorMatch[1].trim() : null),
+    username: tweet.quoted_tweet_author_username || (authorMatch ? authorMatch[2].trim().replace("@", "") : null),
+    avatar: tweet.quoted_tweet_author_avatar || null
+  };
 
-    // For reposts without quoted_tweet_text, extract the reposted content from main text
-    const rawRepostContent = isRepost && !tweet.quoted_tweet_text
-      ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
-      : tweet.quoted_tweet_text;
+  // For reposts without quoted_tweet_text, extract the reposted content from main text
+  const rawRepostContent = isRepost && !tweet.quoted_tweet_text
+    ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
+    : tweet.quoted_tweet_text;
 
   // Helper: strip "Name (@username):" attribution and Nitter URLs
   const stripDisplayNoise = (t: string) =>
@@ -312,17 +311,16 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
                   {highlightMatchesInText(repostContent || "", matchingOptions)}
                 </p>
 
-              </div>
-            )}
-
-            {/* Media Image — full width for all tweet types */}
-            {tweet.media_url && (
-              <div className="mt-2.5 rounded-lg overflow-hidden border border-border/50 bg-black/20">
-                <img 
-                  src={tweet.media_url} 
-                  alt="Tweet media" 
-                  className="w-full h-auto max-h-[400px] object-cover"
-                />
+                {/* Media Image */}
+                {tweet.media_url && (
+                  <div className="mt-2.5 rounded-lg overflow-hidden border border-border/50 bg-black/20">
+                    <img 
+                      src={tweet.media_url} 
+                      alt="Tweet media" 
+                      className="w-full h-auto max-h-[300px] object-contain"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
