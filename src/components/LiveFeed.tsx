@@ -178,18 +178,19 @@ const TweetCard = React.forwardRef(({ tweet, index, predictionOptions }: { tweet
     // This helps for older tweets or if poller extraction fails
     const authorPattern = /^([^(@\n]+)\s+\((@\w+)\):\s*(.*)$/s;
     const rawTextForRepost = tweet.text.replace(/^RT\s+(by\s+)?@\S+:\s*/i, "").trim();
-  const authorMatch = !tweet.quoted_tweet_author_username ? rawTextForRepost.match(authorPattern) : null;
+    const authorMatch = rawTextForRepost.match(authorPattern);
   
-  const originalAuthor = {
-    name: tweet.quoted_tweet_author_name || (authorMatch ? authorMatch[1].trim() : null),
-    username: tweet.quoted_tweet_author_username || (authorMatch ? authorMatch[2].trim().replace("@", "") : null),
-    avatar: tweet.quoted_tweet_author_avatar || null
-  };
+    // For reposts, try to resolve original author from DB fields, then text pattern, then URL
+    const originalAuthor = {
+      name: tweet.quoted_tweet_author_name || (authorMatch ? authorMatch[1].trim() : null),
+      username: tweet.quoted_tweet_author_username || (authorMatch ? authorMatch[2].trim().replace("@", "") : null),
+      avatar: tweet.quoted_tweet_author_avatar || null
+    };
 
-  // For reposts without quoted_tweet_text, extract the reposted content from main text
-  const rawRepostContent = isRepost && !tweet.quoted_tweet_text
-    ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
-    : tweet.quoted_tweet_text;
+    // For reposts without quoted_tweet_text, extract the reposted content from main text
+    const rawRepostContent = isRepost && !tweet.quoted_tweet_text
+      ? (authorMatch ? authorMatch[3].trim() : rawTextForRepost)
+      : tweet.quoted_tweet_text;
 
   // Helper: strip "Name (@username):" attribution and Nitter URLs
   const stripDisplayNoise = (t: string) =>
