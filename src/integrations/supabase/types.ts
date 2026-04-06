@@ -564,11 +564,17 @@ export type Database = {
           id: string
           matched_keywords: string[] | null
           matched_option_id: string | null
+          media_type: string | null
+          media_url: string | null
+          quoted_tweet_author_avatar: string | null
+          quoted_tweet_author_name: string | null
+          quoted_tweet_author_username: string | null
           quoted_tweet_id: string | null
           quoted_tweet_text: string | null
           text: string
           tweet_id: string
           tweet_type: string
+          tweet_url: string | null
         }
         Insert: {
           author_avatar?: string | null
@@ -580,11 +586,17 @@ export type Database = {
           id?: string
           matched_keywords?: string[] | null
           matched_option_id?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          quoted_tweet_author_avatar?: string | null
+          quoted_tweet_author_name?: string | null
+          quoted_tweet_author_username?: string | null
           quoted_tweet_id?: string | null
           quoted_tweet_text?: string | null
           text: string
           tweet_id: string
           tweet_type: string
+          tweet_url?: string | null
         }
         Update: {
           author_avatar?: string | null
@@ -596,11 +608,17 @@ export type Database = {
           id?: string
           matched_keywords?: string[] | null
           matched_option_id?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          quoted_tweet_author_avatar?: string | null
+          quoted_tweet_author_name?: string | null
+          quoted_tweet_author_username?: string | null
           quoted_tweet_id?: string | null
           quoted_tweet_text?: string | null
           text?: string
           tweet_id?: string
           tweet_type?: string
+          tweet_url?: string | null
         }
         Relationships: [
           {
