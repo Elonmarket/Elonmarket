@@ -34,7 +34,7 @@ const levelIcons: Record<string, string> = {
   success: "✅",
 };
 
-const MAX_VISIBLE_LOGS = 50;
+const MAX_VISIBLE_LOGS = 200;
 
 export const PollerTerminal = () => {
   const [logs, setLogs] = useState<PollerLog[]>([]);

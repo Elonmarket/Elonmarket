@@ -1,9 +1,10 @@
-import { TrendingUp, Users, Zap, DollarSign, Target } from "lucide-react";
+import { TrendingUp, Users, Zap, DollarSign, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlatformData } from "@/hooks/usePlatformData";
 import { useOnchainData } from "@/hooks/useOnchainData";
 import { usePredictionRound } from "@/hooks/usePredictionRound";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export const HeroSection = () => {
   const { payoutStats, playerCount } = usePlatformData();
@@ -88,6 +89,23 @@ export const HeroSection = () => {
             Hold $EMARKET tokens, make predictions, earn rewards.
           </p>
 
+          {/* Copyable CA */}
+          <div className="flex items-center justify-center mb-4 animate-slide-up" style={{ animationDelay: "0.35s" }}>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText("C8CjxHwnSWYWsBXnBnAZMAQjK9QVwTLRtRvJUfk5pump");
+                toast.success("Contract address copied!");
+              }}
+              className="group flex items-center gap-2 bg-card/60 border border-border hover:border-neon-green/40 px-4 py-2 rounded-lg transition-all cursor-pointer"
+            >
+              <span className="text-xs text-muted-foreground font-mono">CA:</span>
+              <span className="text-xs font-mono text-foreground/80 truncate max-w-[200px] sm:max-w-none">
+                C8CjxHwnSWYWsBXnBnAZMAQjK9QVwTLRtRvJUfk5pump
+              </span>
+              <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon-green transition-colors shrink-0" />
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-slide-up" style={{ animationDelay: "0.4s" }}>
             <Button asChild size="lg" className="group min-w-[200px] bg-white text-black hover:bg-white/90 transition-all hover:scale-105 active:scale-95">
               <a href="#predict">
@@ -95,9 +113,11 @@ export const HeroSection = () => {
                 Start Predicting
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="group min-w-[200px] border-white/20 hover:bg-white/5 transition-all hover:scale-105 active:scale-95">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Buy $EMARKET
+            <Button asChild variant="outline" size="lg" className="group min-w-[200px] border-white/20 hover:bg-white/5 transition-all hover:scale-105 active:scale-95">
+              <a href="https://pump.fun/coin/C8CjxHwnSWYWsBXnBnAZMAQjK9QVwTLRtRvJUfk5pump" target="_blank" rel="noopener noreferrer">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Buy $EMARKET
+              </a>
             </Button>
           </div>
 
