@@ -93,7 +93,7 @@ export const HeroSection = () => {
           <div className="flex items-center justify-center mb-4 animate-slide-up" style={{ animationDelay: "0.35s" }}>
             <button
               onClick={() => {
-                navigator.clipboard.writeText("C8CjxHwnSWYWsBXnBnAZMAQjK9QVwTLRtRvJUfk5pump");
+                navigator.clipboard.writeText("8sMbdtCxNrgeDPpAvAkNWnwGWmuTVR4SYycVH1HFpump");
                 toast.success("Contract address copied!");
               }}
               className="group flex items-center gap-2 bg-card/60 border border-border hover:border-neon-green/40 px-4 py-2 rounded-lg transition-all cursor-pointer"
