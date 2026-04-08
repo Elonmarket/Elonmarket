@@ -140,7 +140,7 @@ export const RoundResultDialog = () => {
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="relative mb-8"
+            className="relative mb-5"
           >
             <div
               className="absolute inset-0 blur-2xl rounded-full scale-150"
