@@ -193,7 +193,7 @@ export const RoundResultDialog = () => {
           </div>
 
           {!isNoWinner && (
-            <div className="grid grid-cols-2 w-full mb-10 relative">
+            <div className="grid grid-cols-2 w-full mb-6 relative">
               <div className="text-center py-2">
                 <p className="text-2xl font-bold text-white tabular-nums">
                   {result.totalWinners}
