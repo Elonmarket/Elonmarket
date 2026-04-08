@@ -93,14 +93,14 @@ export const HeroSection = () => {
           <div className="flex items-center justify-center mb-4 animate-slide-up" style={{ animationDelay: "0.35s" }}>
             <button
               onClick={() => {
-                navigator.clipboard.writeText("8sMbdtCxNrgeDPpAvAkNWnwGWmuTVR4SYycVH1HFpump");
+                navigator.clipboard.writeText("HzRrwoMTjWbq3rqMM8J3mT6rFW1ERT5VBo5r34qopump");
                 toast.success("Contract address copied!");
               }}
               className="group flex items-center gap-2 bg-card/60 border border-border hover:border-neon-green/40 px-4 py-2 rounded-lg transition-all cursor-pointer"
             >
               <span className="text-xs text-muted-foreground font-mono">CA:</span>
               <span className="text-xs font-mono text-foreground/80 truncate max-w-[200px] sm:max-w-none">
-                8sMbdtCxNrgeDPpAvAkNWnwGWmuTVR4SYycVH1HFpump
+                HzRrwoMTjWbq3rqMM8J3mT6rFW1ERT5VBo5r34qopump
               </span>
               <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon-green transition-colors shrink-0" />
             </button>
