@@ -146,7 +146,7 @@ export const RoundResultDialog = () => {
               className="absolute inset-0 blur-2xl rounded-full scale-150"
               style={{ backgroundColor: glowColor }}
             />
-            <div className="relative w-20 h-20 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
               {isNoWinner ? (
                 <AlertCircle className="w-10 h-10 text-neon-orange" />
               ) : result.isPersonalWinner ? (
