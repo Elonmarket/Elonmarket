@@ -163,7 +163,7 @@ export const RoundResultDialog = () => {
             <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
               Round #{result.roundNumber} Complete
             </h2>
-            <div className="text-2xl font-display font-bold text-white tracking-tight flex flex-wrap items-center justify-center gap-2">
+            <div className="text-lg sm:text-xl font-display font-bold text-white tracking-tight flex flex-wrap items-center justify-center gap-2">
               {isNoWinner ? "No Winner" : "Winning Category:"}
               {!isNoWinner && (
                 <span className={`${iconToneClass} uppercase`}>
