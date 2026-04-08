@@ -159,7 +159,7 @@ export const RoundResultDialog = () => {
             </div>
           </motion.div>
 
-          <div className="text-center space-y-2 mb-8">
+          <div className="text-center space-y-1.5 mb-5">
             <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
               Round #{result.roundNumber} Complete
             </h2>
