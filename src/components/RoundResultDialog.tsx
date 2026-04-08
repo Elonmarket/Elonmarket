@@ -130,40 +130,40 @@ export const RoundResultDialog = () => {
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
-      <DialogContent className="max-w-[92vw] sm:max-w-[380px] border border-white/10 bg-[#070b14]/90 backdrop-blur-2xl p-0 overflow-hidden rounded-[1.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-        <div className="relative p-5 sm:p-6 flex flex-col items-center">
+      <DialogContent className="max-w-[85vw] sm:max-w-[320px] border border-white/10 bg-[#070b14]/90 backdrop-blur-2xl p-0 overflow-hidden rounded-[1rem] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <div className="relative p-4 flex flex-col items-center">
           <div
-            className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 blur-[100px] rounded-full opacity-20 pointer-events-none"
+            className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 blur-[80px] rounded-full opacity-20 pointer-events-none"
             style={{ backgroundColor: glowColor }}
           />
 
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="relative mb-5"
+            className="relative mb-3"
           >
             <div
-              className="absolute inset-0 blur-2xl rounded-full scale-150"
+              className="absolute inset-0 blur-xl rounded-full scale-150"
               style={{ backgroundColor: glowColor }}
             />
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
+            <div className="relative w-10 h-10 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
               {isNoWinner ? (
-                <AlertCircle className="w-7 h-7 text-neon-orange" />
+                <AlertCircle className="w-5 h-5 text-neon-orange" />
               ) : result.isPersonalWinner ? (
-                <Gift className="w-7 h-7 text-neon-green" />
+                <Gift className="w-5 h-5 text-neon-green" />
               ) : userVotedAndLost ? (
-                <AlertCircle className="w-7 h-7 text-neon-orange" />
+                <AlertCircle className="w-5 h-5 text-neon-orange" />
               ) : (
-                <Trophy className="w-7 h-7 text-neon-cyan" />
+                <Trophy className="w-5 h-5 text-neon-cyan" />
               )}
             </div>
           </motion.div>
 
-          <div className="text-center space-y-1.5 mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+          <div className="text-center space-y-1 mb-3">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
               Round #{result.roundNumber} Complete
             </h2>
-            <div className="text-lg sm:text-xl font-display font-bold text-white tracking-tight flex flex-wrap items-center justify-center gap-2">
+            <div className="text-sm sm:text-base font-display font-bold text-white tracking-tight flex flex-wrap items-center justify-center gap-1.5">
               {isNoWinner ? "No Winner" : "Winning Category:"}
               {!isNoWinner && (
                 <span className={`${iconToneClass} uppercase`}>
@@ -171,52 +171,52 @@ export const RoundResultDialog = () => {
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs text-muted-foreground max-w-[260px] mx-auto leading-relaxed">
               {summaryText}
             </p>
             {result.isPersonalWinner && !isNoWinner && (
-              <p className="text-neon-green text-sm font-bold mt-2">You predicted correctly!</p>
+              <p className="text-neon-green text-xs font-bold mt-1">You predicted correctly!</p>
             )}
             {userVotedAndLost && (
-              <p className="text-neon-orange text-sm font-bold mt-2">You didn't win this round. Good luck next time!</p>
+              <p className="text-neon-orange text-xs font-bold mt-1">You didn't win this round. Good luck next time!</p>
             )}
           </div>
 
-          <div className="w-full bg-white/[0.03] border border-white/5 rounded-xl p-4 mb-5 group relative overflow-hidden">
-            <Quote className="absolute -top-2 -right-2 w-12 h-12 text-white/5 -rotate-12" />
-            <p className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-black mb-3">
+          <div className="w-full bg-white/[0.03] border border-white/5 rounded-lg p-3 mb-3 group relative overflow-hidden">
+            <Quote className="absolute -top-2 -right-2 w-8 h-8 text-white/5 -rotate-12" />
+            <p className="text-[9px] text-muted-foreground/50 uppercase tracking-widest font-black mb-1.5">
               {isNoWinner ? "Round Summary" : "Verified Post"}
             </p>
-            <p className="text-white/80 italic leading-relaxed text-sm">
+            <p className="text-white/80 italic leading-relaxed text-xs">
               "{result.winningTweetText || (isNoWinner ? "No matching post was detected during this round." : "The round ended after a verified winning post was matched.")}"
             </p>
           </div>
 
           {!isNoWinner && (
-            <div className="grid grid-cols-2 w-full mb-6 relative">
-              <div className="text-center py-2">
-                <p className="text-2xl font-bold text-white tabular-nums">
+            <div className="grid grid-cols-2 w-full mb-4 relative">
+              <div className="text-center py-1">
+                <p className="text-lg font-bold text-white tabular-nums">
                   {result.totalWinners}
                 </p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold">
+                <p className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-bold">
                   Winners
                 </p>
               </div>
-              <div className="absolute left-1/2 top-1/2 -translate-y-1/2 w-px h-8 bg-white/10" />
-              <div className="text-center py-2">
-                <p className={`text-2xl font-bold ${result.isPersonalWinner ? "text-neon-green" : "text-neon-cyan"} tabular-nums`}>
-                  {result.payoutAmount.toFixed(4)} <span className="text-sm">SOL</span>
+              <div className="absolute left-1/2 top-1/2 -translate-y-1/2 w-px h-6 bg-white/10" />
+              <div className="text-center py-1">
+                <p className={`text-lg font-bold ${result.isPersonalWinner ? "text-neon-green" : "text-neon-cyan"} tabular-nums`}>
+                  {result.payoutAmount.toFixed(4)} <span className="text-xs">SOL</span>
                 </p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold">
+                <p className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-bold">
                   Per Winner
                 </p>
               </div>
             </div>
           )}
 
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-2">
             <Button
-              className={`w-full h-11 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none shadow-xl ${
+              className={`w-full h-9 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none shadow-xl ${
                 result.isPersonalWinner
                   ? "bg-neon-green text-black hover:bg-neon-green/90 shadow-neon-green/20"
                   : "bg-white/10 text-white hover:bg-white/20"
@@ -231,10 +231,10 @@ export const RoundResultDialog = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-center gap-2 text-neon-green"
+                  className="flex items-center justify-center gap-1.5 text-neon-green"
                 >
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">
                     Automatic transfer sent to winners
                   </span>
                 </motion.div>
