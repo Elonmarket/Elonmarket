@@ -216,7 +216,7 @@ export const RoundResultDialog = () => {
 
           <div className="w-full space-y-4">
             <Button
-              className={`w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none shadow-xl ${
+              className={`w-full h-11 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none shadow-xl ${
                 result.isPersonalWinner
                   ? "bg-neon-green text-black hover:bg-neon-green/90 shadow-neon-green/20"
                   : "bg-white/10 text-white hover:bg-white/20"
