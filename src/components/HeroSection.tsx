@@ -93,14 +93,14 @@ export const HeroSection = () => {
           <div className="flex items-center justify-center mb-4 animate-slide-up" style={{ animationDelay: "0.35s" }}>
             <button
               onClick={() => {
-                navigator.clipboard.writeText("coming soon");
+                navigator.clipboard.writeText("AtsDprbcA4GY1upnFNY8ofXRaBum8ndLY3VongAMpump");
                 toast.success("Contract address copied!");
               }}
               className="group flex items-center gap-2 bg-card/60 border border-border hover:border-neon-green/40 px-4 py-2 rounded-lg transition-all cursor-pointer"
             >
               <span className="text-xs text-muted-foreground font-mono">CA:</span>
               <span className="text-xs font-mono text-foreground/80 truncate max-w-[200px] sm:max-w-none">
-                coming soon
+                AtsDprbcA4GY1upnFNY8ofXRaBum8ndLY3VongAMpump
               </span>
               <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon-green transition-colors shrink-0" />
             </button>
@@ -114,7 +114,7 @@ export const HeroSection = () => {
               </a>
             </Button>
             <Button asChild variant="outline" size="lg" className="group min-w-[200px] border-white/20 hover:bg-white/5 transition-all hover:scale-105 active:scale-95">
-              <a href="https://pump.fun/coin/HzRrwoMTjWbq3rqMM8J3mT6rFW1ERT5VBo5r34qopump" target="_blank" rel="noopener noreferrer">
+              <a href="https://pump.fun/coin/AtsDprbcA4GY1upnFNY8ofXRaBum8ndLY3VongAMpump" target="_blank" rel="noopener noreferrer">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Buy $EMARKET
               </a>
