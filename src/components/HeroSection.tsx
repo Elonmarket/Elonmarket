@@ -100,7 +100,7 @@ export const HeroSection = () => {
             >
               <span className="text-xs text-muted-foreground font-mono">CA:</span>
               <span className="text-xs font-mono text-foreground/80 truncate max-w-[200px] sm:max-w-none">
-                HzRrwoMTjWbq3rqMM8J3mT6rFW1ERT5VBo5r34qopump
+                coming soon
               </span>
               <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon-green transition-colors shrink-0" />
             </button>
